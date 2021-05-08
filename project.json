@@ -1,0 +1,9 @@
+{
+  "$schema": "C:/qub/qub/javaproject-java/data/javaproject.schema.json",
+  "publisher": "qub",
+  "project": "github-java",
+  "version": "1",
+  "java": {
+    "dependencies": []
+  }
+}
