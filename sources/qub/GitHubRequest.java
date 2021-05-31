@@ -110,6 +110,11 @@ public class GitHubRequest
         return this.httpHeaders;
     }
 
+    public Result<String> getHeaderValue(String headerName)
+    {
+        return this.httpHeaders.getValue(headerName);
+    }
+
     public GitHubRequest setHeader(String headerName, String headerValue)
     {
         this.httpHeaders.set(headerName, headerValue);
@@ -157,7 +162,7 @@ public class GitHubRequest
 
     public GitHubRequest setBody(long bodyLength, ByteReadStream body)
     {
-        PreCondition.assertGreaterThanOrEqualTo(0, bodyLength, "bodyLength");
+        PreCondition.assertGreaterThanOrEqualTo(bodyLength, 0, "bodyLength");
         PreCondition.assertNotNull(body, "body");
         PreCondition.assertNotDisposed(body, "body");
 
@@ -175,7 +180,7 @@ public class GitHubRequest
         {
             final InMemoryByteStream bodyStream = InMemoryByteStream.create();
             final int bodyLength = CharacterEncoding.UTF_8.encodeCharacters(body, bodyStream).await();
-            return this.setBody(bodyLength, bodyStream);
+            return this.setBody(bodyLength, bodyStream.endOfStream());
         });
     }
 

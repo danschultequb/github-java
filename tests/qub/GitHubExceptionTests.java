@@ -68,13 +68,13 @@ public interface GitHubExceptionTests
                     new GitHubException(401, GitHubErrorResponse.create()
                         .setMessage("Requires authentication")
                         .setDocumentationUrl("https://github.com")),
-                    "qub.GitHubException: Requires authentication {\"statusCode\":401,\"errorResponse\":{\"message\":\"Requires authentication\",\"documentationUrl\":\"https://github.com\"}}");
+                    "qub.GitHubException: Requires authentication {\"statusCode\":401,\"errorResponse\":{\"message\":\"Requires authentication\",\"documentation_url\":\"https://github.com\"}}");
                 toStringTest.run(
                     new GitHubException(123, GitHubErrorResponse.create()
                         .setMessage("fake message")
                         .setDocumentationUrl("invalid url string")
                         .setErrors(Iterable.create())),
-                    "qub.GitHubException: fake message {\"statusCode\":123,\"errorResponse\":{\"message\":\"fake message\",\"documentationUrl\":\"invalid url string\",\"errors\":[]}}");
+                    "qub.GitHubException: fake message {\"statusCode\":123,\"errorResponse\":{\"message\":\"fake message\",\"documentation_url\":\"invalid url string\",\"errors\":[]}}");
                 toStringTest.run(
                     new GitHubException(422, GitHubErrorResponse.create()
                         .setMessage("Repository creation failed.")
@@ -85,7 +85,7 @@ public interface GitHubExceptionTests
                                 .setCode("custom")
                                 .setField("name")
                                 .setMessage("name already exists on this account")))),
-                    "qub.GitHubException: Repository creation failed. {\"statusCode\":422,\"errorResponse\":{\"message\":\"Repository creation failed.\",\"documentationUrl\":\"https://docs.github.com/rest/reference/repos#create-a-repository-for-the-authenticated-user\",\"errors\":[{\"resource\":\"Repository\",\"code\":\"custom\",\"field\":\"name\",\"message\":\"name already exists on this account\"}]}}");
+                    "qub.GitHubException: Repository creation failed. {\"statusCode\":422,\"errorResponse\":{\"message\":\"Repository creation failed.\",\"documentation_url\":\"https://docs.github.com/rest/reference/repos#create-a-repository-for-the-authenticated-user\",\"errors\":[{\"resource\":\"Repository\",\"code\":\"custom\",\"field\":\"name\",\"message\":\"name already exists on this account\"}]}}");
             });
         });
     }

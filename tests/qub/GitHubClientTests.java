@@ -1,124 +1,172 @@
-//package qub;
-//
-//public interface GitHubClientTests
-//{
-//    static void test(TestRunner runner)
-//    {
-//        runner.testGroup(GitHubClient.class, () ->
-//        {
-//            runner.testGroup("create(Network)", () ->
-//            {
-//                runner.test("with null", (Test test) ->
-//                {
-//                    final Network network = null;
-//                    test.assertThrows(() -> GitHubClient.create(network),
-//                        new PreConditionFailure("network cannot be null."));
-//                });
-//
-//                runner.test("with non-null",
-//                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
-//                    (Test test, FakeDesktopProcess process) ->
-//                {
-//                    final Network network = process.getNetwork();
-//                    final GitHubClient gitHubClient = GitHubClient.create(network);
-//                    test.assertNotNull(gitHubClient);
-//                });
-//            });
-//
-//            runner.testGroup("create(HttpClient)", () ->
-//            {
-//                runner.test("with null", (Test test) ->
-//                {
-//                    final HttpClient httpClient = null;
-//                    test.assertThrows(() -> GitHubClient.create(httpClient),
-//                        new PreConditionFailure("httpClient cannot be null."));
-//                });
-//
-//                runner.test("with non-null",
-//                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
-//                    (Test test, FakeDesktopProcess process) ->
-//                {
-//                    final HttpClient httpClient = HttpClient.create(process.getNetwork());
-//                    final GitHubClient gitHubClient = GitHubClient.create(httpClient);
-//                    test.assertNotNull(gitHubClient);
-//                });
-//            });
-//        });
-//    }
-//
-//    static void test(TestRunner runner, Function1<PersonalAccessTokenType,? extends GitHubClient> creator)
-//    {
-//        PreCondition.assertNotNull(runner, "runner");
-//        PreCondition.assertNotNull(creator, "creator");
-//
-//        runner.testGroup(GitHubClient.class, () ->
-//        {
-//
-//            runner.testGroup("setPersonalAccessToken(String)", () ->
-//            {
-//                final Action2<String,Throwable> setPersonalAccessTokenErrorTest = (String personalAccessToken, Throwable expected) ->
-//                {
-//                    runner.test("with " + Strings.escapeAndQuote(personalAccessToken), (Test test) ->
-//                    {
-//                        final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                        test.assertFalse(gitHubClient.hasPersonalAccessToken());
-//
-//                        test.assertThrows(() -> gitHubClient.setPersonalAccessToken(personalAccessToken),
-//                            expected);
-//                        test.assertFalse(gitHubClient.hasPersonalAccessToken());
-//                    });
-//                };
-//
-//                setPersonalAccessTokenErrorTest.run(null, new PreConditionFailure("personalAccessToken cannot be null."));
-//                setPersonalAccessTokenErrorTest.run("", new PreConditionFailure("personalAccessToken cannot be empty."));
-//
-//                final Action1<String> setPersonalAccessTokenTest = (String personalAccessToken) ->
-//                {
-//                    runner.test("with " + Strings.escapeAndQuote(personalAccessToken), (Test test) ->
-//                    {
-//                        final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                        test.assertFalse(gitHubClient.hasPersonalAccessToken());
-//
-//                        final GitHubClient setPersonalAccessTokenResult = gitHubClient.setPersonalAccessToken(personalAccessToken);
-//                        test.assertSame(gitHubClient, setPersonalAccessTokenResult);
-//                        test.assertTrue(gitHubClient.hasPersonalAccessToken());
-//                    });
-//                };
-//
-//                setPersonalAccessTokenTest.run("fakeGitHubToken");
-//            });
-//
-//            runner.testGroup("getAuthenticatedUser()", () ->
-//            {
-//                runner.test("when not authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getAuthenticatedUser().await());
-//                    test.assertEqual(401, error.getStatusCode());
-//                    test.assertEqual("Requires authentication", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with invalid personal access token", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Invalid);
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getAuthenticatedUser().await());
-//                    test.assertEqual(401, error.getStatusCode());
-//                    test.assertEqual("Bad credentials", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("when authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
-//                    final GitHubUser user = gitHubClient.getAuthenticatedUser().await();
-//                    test.assertNotNull(user);
-//                    test.assertNotNullAndNotEmpty(user.getLogin());
-//                });
-//            });
-//
+package qub;
+
+public interface GitHubClientTests
+{
+    static void test(TestRunner runner)
+    {
+        runner.testGroup(GitHubClient.class, () ->
+        {
+            runner.testGroup("create(Network)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final Network network = null;
+                    test.assertThrows(() -> GitHubClient.create(network),
+                        new PreConditionFailure("network cannot be null."));
+                });
+
+                runner.test("with non-null",
+                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                    (Test test, FakeDesktopProcess process) ->
+                {
+                    final Network network = process.getNetwork();
+                    final GitHubClient gitHubClient = GitHubClient.create(network);
+                    test.assertNotNull(gitHubClient);
+                });
+            });
+
+            runner.testGroup("create(HttpClient)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final HttpClient httpClient = null;
+                    test.assertThrows(() -> GitHubClient.create(httpClient),
+                        new PreConditionFailure("httpClient cannot be null."));
+                });
+
+                runner.test("with non-null",
+                    (TestResources resources) -> Tuple.create(resources.createFakeDesktopProcess()),
+                    (Test test, FakeDesktopProcess process) ->
+                {
+                    final HttpClient httpClient = HttpClient.create(process.getNetwork());
+                    final GitHubClient gitHubClient = GitHubClient.create(httpClient);
+                    test.assertNotNull(gitHubClient);
+                });
+            });
+        });
+    }
+
+    static void test(TestRunner runner, Function1<AccessTokenType,? extends GitHubClient> creator)
+    {
+        PreCondition.assertNotNull(runner, "runner");
+        PreCondition.assertNotNull(creator, "creator");
+
+        runner.testGroup(GitHubClient.class, () ->
+        {
+            runner.testGroup("setAccessToken(String)", () ->
+            {
+                final Action2<String,Throwable> setAccessTokenErrorTest = (String personalAccessToken, Throwable expected) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(personalAccessToken), (Test test) ->
+                    {
+                        final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                        test.assertFalse(gitHubClient.hasAccessToken());
+
+                        test.assertThrows(() -> gitHubClient.setAccessToken(personalAccessToken),
+                            expected);
+                        test.assertFalse(gitHubClient.hasAccessToken());
+                    });
+                };
+
+                setAccessTokenErrorTest.run(null, new PreConditionFailure("accessToken cannot be null."));
+                setAccessTokenErrorTest.run("", new PreConditionFailure("accessToken cannot be empty."));
+
+                final Action1<String> setAccessTokenTest = (String personalAccessToken) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(personalAccessToken), (Test test) ->
+                    {
+                        final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                        test.assertFalse(gitHubClient.hasAccessToken());
+
+                        final GitHubClient setAccessTokenResult = gitHubClient.setAccessToken(personalAccessToken);
+                        test.assertSame(gitHubClient, setAccessTokenResult);
+                        test.assertTrue(gitHubClient.hasAccessToken());
+                    });
+                };
+
+                setAccessTokenTest.run("fakeGitHubToken");
+            });
+
+            runner.testGroup("setBaseUrl(String)", () ->
+            {
+                final Action2<String,Throwable> setBaseUrlErrorTest = (String baseUrl, Throwable expected) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(baseUrl), (Test test) ->
+                    {
+                        final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                        test.assertEqual(URL.parse("https://api.github.com").await(), gitHubClient.getBaseUrl());
+
+                        test.assertThrows(() -> gitHubClient.setBaseUrl(baseUrl).await(),
+                            expected);
+                        test.assertEqual(URL.parse("https://api.github.com").await(), gitHubClient.getBaseUrl());
+                    });
+                };
+
+                setBaseUrlErrorTest.run(null, new PreConditionFailure("baseUrl cannot be null."));
+                setBaseUrlErrorTest.run("", new PreConditionFailure("baseUrl cannot be empty."));
+                setBaseUrlErrorTest.run("hello there", new java.lang.IllegalArgumentException("A URL must begin with either a scheme (such as \"http\") or a host (such as \"www.example.com\"), not \" \"."));
+
+                final Action1<String> setBaseUrlTest = (String baseUrl) ->
+                {
+                    runner.test("with " + Strings.escapeAndQuote(baseUrl), (Test test) ->
+                    {
+                        final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                        test.assertEqual(URL.parse("https://api.github.com").await(), gitHubClient.getBaseUrl());
+
+                        final GitHubClient setBaseUrlResult = gitHubClient.setBaseUrl(baseUrl).await();
+                        test.assertSame(gitHubClient, setBaseUrlResult);
+                        test.assertEqual(baseUrl, gitHubClient.getBaseUrl().toString());
+                    });
+                };
+
+                setBaseUrlTest.run("https://api.github.com");
+                setBaseUrlTest.run("api.github.com");
+                setBaseUrlTest.run("https://my.github.base.url");
+                setBaseUrlTest.run("my.github.base.url");
+            });
+
+            runner.testGroup("getAuthenticatedUser()", () ->
+            {
+                runner.test("when not authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final GetAuthenticatedUserResponse response = gitHubClient.getAuthenticatedUser().await();
+                    test.assertNotNull(response);
+                    test.assertEqual(401, response.getStatusCode());
+                    test.assertTrue(response.isErrorResponse());
+                    final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                    test.assertNotNull(errorResponse);
+                    test.assertEqual("Requires authentication", errorResponse.getMessage());
+                    test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", errorResponse.getDocumentationUrl());
+                    test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                });
+
+                runner.test("with invalid personal access token", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
+                    final GetAuthenticatedUserResponse response = gitHubClient.getAuthenticatedUser().await();
+                    test.assertNotNull(response);
+                    test.assertEqual(401, response.getStatusCode());
+                    test.assertTrue(response.isErrorResponse());
+                    final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                    test.assertEqual("Bad credentials", errorResponse.getMessage());
+                    test.assertEqual("https://docs.github.com/rest", errorResponse.getDocumentationUrl());
+                    test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                });
+
+                runner.test("when authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    final GetAuthenticatedUserResponse response = gitHubClient.getAuthenticatedUser().await();
+                    test.assertNotNull(response);
+                    test.assertEqual(200, response.getStatusCode());
+                    test.assertFalse(response.isErrorResponse());
+                    final GitHubUser user = response.getAuthenticatedUser().await();
+                    test.assertNotNull(user);
+                    test.assertNotNullAndNotEmpty(user.getLogin());
+                });
+            });
+
 //            runner.testGroup("getRepository(GetRepositoryParameters)", () ->
 //            {
 //                final Action2<GetRepositoryParameters,Throwable> getRepositoryErrorTest = (GetRepositoryParameters parameters, Throwable expected) ->
@@ -482,6 +530,6 @@
 //                    test.assertNull(result);
 //                });
 //            });
-//        });
-//    }
-//}
+        });
+    }
+}

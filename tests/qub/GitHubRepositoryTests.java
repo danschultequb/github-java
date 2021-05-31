@@ -12,6 +12,7 @@ public interface GitHubRepositoryTests
                 test.assertNotNull(repository);
                 test.assertNull(repository.getName());
                 test.assertNull(repository.getFullName());
+                test.assertNull(repository.getOwner());
                 test.assertEqual(JSONObject.create(), repository.toJson());
             });
 
@@ -27,11 +28,13 @@ public interface GitHubRepositoryTests
                 {
                     final JSONObject json = JSONObject.create()
                         .setString("name", "fake-name")
-                        .setString("full_name", "fake-full-name");
+                        .setString("full_name", "fake-full-name")
+                        .setObject("owner", JSONObject.create());
                     final GitHubRepository repository = GitHubRepository.create(json);
                     test.assertNotNull(repository);
                     test.assertEqual("fake-name", repository.getName());
                     test.assertEqual("fake-full-name", repository.getFullName());
+                    test.assertEqual(GitHubUser.create(), repository.getOwner());
                     test.assertSame(json, repository.toJson());
                 });
             });
@@ -102,6 +105,39 @@ public interface GitHubRepositoryTests
 
                 setFullNameTest.run("fake-full-name");
                 setFullNameTest.run("qub/github-java");
+            });
+
+            runner.testGroup("setOwner(GitHubUser)", () ->
+            {
+                final Action2<GitHubUser,Throwable> setOwnerErrorTest = (GitHubUser owner, Throwable expected) ->
+                {
+                    runner.test("with " + owner, (Test test) ->
+                    {
+                        final GitHubRepository repository = GitHubRepository.create();
+                        test.assertNull(repository.getOwner());
+
+                        test.assertThrows(() -> repository.setOwner(owner), expected);
+                        test.assertNull(repository.getOwner());
+                    });
+                };
+
+                setOwnerErrorTest.run(null, new PreConditionFailure("owner cannot be null."));
+
+                final Action1<GitHubUser> setOwnerTest = (GitHubUser owner) ->
+                {
+                    runner.test("with " + owner, (Test test) ->
+                    {
+                        final GitHubRepository repository = GitHubRepository.create();
+                        test.assertNull(repository.getOwner());
+
+                        final GitHubRepository setOwnerResult = repository.setOwner(owner);
+                        test.assertSame(repository, setOwnerResult);
+                        test.assertEqual(owner, repository.getOwner());
+                    });
+                };
+
+                setOwnerTest.run(GitHubUser.create());
+                setOwnerTest.run(GitHubUser.create().setLogin("fake-owner"));
             });
         });
     }

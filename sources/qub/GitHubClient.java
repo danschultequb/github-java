@@ -5,14 +5,14 @@ package qub;
  */
 public interface GitHubClient
 {
-    static AnonymousGitHubClient create(Network network)
+    static BasicGitHubClient create(Network network)
     {
-        return AnonymousGitHubClient.create(network);
+        return BasicGitHubClient.create(network);
     }
 
-    static AnonymousGitHubClient create(HttpClient httpClient)
+    static BasicGitHubClient create(HttpClient httpClient)
     {
-        return AnonymousGitHubClient.create(httpClient);
+        return BasicGitHubClient.create(httpClient);
     }
 
     /**
@@ -42,6 +42,19 @@ public interface GitHubClient
      * @return This object for method chaining.
      */
     GitHubClient setBaseUrl(URL baseUrl);
+
+    /**
+     * Set the access token that will be used to authenticate the client's requests.
+     * @param accessToken The access token that will be used to authenticate the client's requests.
+     * @return This object for method chaining.
+     */
+    GitHubClient setAccessToken(String accessToken);
+
+    /**
+     * Get whether or not this client has an access token.
+     * @return Whether or not this client has an access token.
+     */
+    boolean hasAccessToken();
 
     /**
      * Send a generic GitHubRequest. If this client is authenticated, then the personal access

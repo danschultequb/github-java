@@ -1,6 +1,6 @@
 package qub;
 
-public enum PersonalAccessTokenType
+public enum AccessTokenType
 {
     /**
      * No personal access token is available.

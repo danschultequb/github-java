@@ -3,7 +3,7 @@ package qub;
 public class GitHubErrorResponse extends JSONObjectWrapperBase
 {
     private static final String messagePropertyName = "message";
-    private static final String documentationUrlPropertyName = "documentationUrl";
+    private static final String documentationUrlPropertyName = "documentation_url";
     private static final String errorsPropertyName = "errors";
 
     protected GitHubErrorResponse(JSONObject json)
