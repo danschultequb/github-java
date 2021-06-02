@@ -167,267 +167,331 @@ public interface GitHubClientTests
                 });
             });
 
-//            runner.testGroup("getRepository(GetRepositoryParameters)", () ->
-//            {
-//                final Action2<GetRepositoryParameters,Throwable> getRepositoryErrorTest = (GetRepositoryParameters parameters, Throwable expected) ->
-//                {
-//                    runner.test("with " + parameters, (Test test) ->
-//                    {
-//                        final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                        test.assertThrows(() -> gitHubClient.getRepository(parameters).await(), expected);
-//                    });
-//                };
-//
-//                getRepositoryErrorTest.run(null, new PreConditionFailure("parameters cannot be null."));
-//                getRepositoryErrorTest.run(GetRepositoryParameters.create(), new PreConditionFailure("parameters.getOwner() cannot be null."));
-//                getRepositoryErrorTest.run(GetRepositoryParameters.create().setOwner("fake-owner"), new PreConditionFailure("parameters.getName() cannot be null."));
-//                getRepositoryErrorTest.run(GetRepositoryParameters.create().setName("fake-name"), new PreConditionFailure("parameters.getOwner() cannot be null."));
-//
-//                runner.test("with non-existing repository when not authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
-//                        .setOwner("fake-owner")
-//                        .setName("fake-repo");
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getRepository(parameters).await());
-//                    test.assertEqual(404, error.getStatusCode());
-//                    test.assertEqual("Not Found", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest/reference/repos#get-a-repository", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with existing public repository when not authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
-//                        .setOwner("octokit")
-//                        .setName("octokit.net");
-//                    try
-//                    {
-//                        final GitHubRepository repository = gitHubClient.getRepository(parameters).await();
-//                        test.assertEqual("octokit", repository.getOwner().getLogin());
-//                        test.assertEqual("octokit.net", repository.getName());
-//                        test.assertEqual("octokit/octokit.net", repository.getFullName());
-//                    }
-//                    catch (GitHubException error)
-//                    {
-//                        test.assertEqual(403, error.getStatusCode());
-//                        test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", error.getMessage());
-//                        test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", error.getDocumentationUrl());
-//                        test.assertEqual(Iterable.create(), error.getErrors());
-//                    }
-//                });
-//
-//                runner.test("with non-existing repository and invalid token", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Invalid);
-//                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
-//                        .setOwner("fake-owner")
-//                        .setName("fake-repo");
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getRepository(parameters).await());
-//                    test.assertEqual(401, error.getStatusCode());
-//                    test.assertEqual("Bad credentials", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with existing public repository and invalid token", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Invalid);
-//                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
-//                        .setOwner("octokit")
-//                        .setName("octokit.net");
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getRepository(parameters).await());
-//                    test.assertEqual(401, error.getStatusCode());
-//                    test.assertEqual("Bad credentials", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with non-existing repository when authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
-//                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
-//                        .setOwner("fake-owner")
-//                        .setName("fake-repo");
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getRepository(parameters).await());
-//                    test.assertEqual(404, error.getStatusCode());
-//                    test.assertEqual("Not Found", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest/reference/repos#get-a-repository", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with existing public repository when authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
-//                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
-//                        .setOwner("octokit")
-//                        .setName("octokit.net");
-//                    final GitHubRepository repository = gitHubClient.getRepository(parameters).await();
-//                    test.assertEqual("octokit", repository.getOwner().getLogin());
-//                    test.assertEqual("octokit.net", repository.getName());
-//                    test.assertEqual("octokit/octokit.net", repository.getFullName());
-//                });
-//            });
-//
-//            runner.testGroup("getRepositoriesForAuthenticatedUser()", () ->
-//            {
-//                runner.test("when not authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getRepositoriesForAuthenticatedUser().await());
-//
-//                    final int statusCode = error.getStatusCode();
-//                    test.assertOneOf(Iterable.create(401, 403), statusCode);
-//                    switch (statusCode)
-//                    {
-//                        case 401:
-//                            test.assertEqual("Requires authentication", error.getMessage());
-//                            test.assertEqual("https://docs.github.com/rest/reference/repos#list-repositories-for-the-authenticated-user", error.getDocumentationUrl());
-//                            test.assertEqual(Iterable.create(), error.getErrors());
-//                            break;
-//
-//                        case 403:
-//                            test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", error.getMessage());
-//                            test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", error.getDocumentationUrl());
-//                            break;
-//
-//                        default:
-//                            test.fail("Unexpected status code");
-//                            break;
-//                    }
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with invalid personal access token", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Invalid);
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.getRepositoriesForAuthenticatedUser().await());
-//                    test.assertEqual(401, error.getStatusCode());
-//                    test.assertEqual("Bad credentials", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("when authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
-//                    final Iterable<GitHubRepository> repositories = gitHubClient.getRepositoriesForAuthenticatedUser().await();
-//                    test.assertNotNull(repositories);
-//                });
-//            });
-//
-//            runner.testGroup("createRepository(CreateRepositoryParameters)", () ->
-//            {
-//                final Action2<CreateRepositoryParameters,Throwable> createRepositoryErrorTest = (CreateRepositoryParameters parameters, Throwable expected) ->
-//                {
-//                    runner.test("with " + parameters, (Test test) ->
-//                    {
-//                        final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                        test.assertThrows(() -> gitHubClient.createRepository(parameters),
-//                            expected);
-//                    });
-//                };
-//
-//                createRepositoryErrorTest.run(null, new PreConditionFailure("parameters cannot be null."));
-//                createRepositoryErrorTest.run(CreateRepositoryParameters.create(), new PreConditionFailure("parameters.getName() cannot be null."));
-//
-//                runner.test("when not authenticated", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
-//                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-//                        .setName("fake-repo-name");
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.createRepository(parameters).await());
-//
-//                    final int statusCode = error.getStatusCode();
-//                    test.assertOneOf(Iterable.create(401, 403), statusCode);
-//                    switch (statusCode)
-//                    {
-//                        case 401:
-//                            test.assertEqual("Requires authentication", error.getMessage());
-//                            test.assertEqual("https://docs.github.com/rest/reference/repos#create-a-repository-for-the-authenticated-user", error.getDocumentationUrl());
-//                            test.assertEqual(Iterable.create(), error.getErrors());
-//                            break;
-//
-//                        case 403:
-//                            test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", error.getMessage());
-//                            test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", error.getDocumentationUrl());
-//                            break;
-//
-//                        default:
-//                            test.fail("Unexpected status code");
-//                            break;
-//                    }
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with invalid personal access token", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Invalid);
-//                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-//                        .setName("fake-repo-name");
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.createRepository(parameters).await());
-//                    test.assertEqual(401, error.getStatusCode());
-//                    test.assertEqual("Bad credentials", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest", error.getDocumentationUrl());
-//                    test.assertEqual(Iterable.create(), error.getErrors());
-//                });
-//
-//                runner.test("with repository that already exists", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
-//                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-//                        .setName("github-java");
-//                    final GitHubException error = test.assertThrows(GitHubException.class, () -> gitHubClient.createRepository(parameters).await());
-//                    test.assertEqual(422, error.getStatusCode());
-//                    test.assertEqual("Repository creation failed.", error.getMessage());
-//                    test.assertEqual("https://docs.github.com/rest/reference/repos#create-a-repository-for-the-authenticated-user", error.getDocumentationUrl());
-//                    test.assertEqual(
-//                        Iterable.create(
-//                            GitHubError.create()
-//                                .setResource("Repository")
-//                                .setCode("custom")
-//                                .setField("name")
-//                                .setMessage("name already exists on this account")
-//                        ),
-//                        error.getErrors());
-//                });
-//
-//                runner.test("with repository name that doesn't exist", (Test test) ->
-//                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
-//                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-//                        .setName("fake-repo-name");
-//                    final GitHubRepository repository = gitHubClient.createRepository(parameters).await();
-//                    try
-//                    {
-//                        test.assertNotNull(repository);
-//                        test.assertEqual("fake-repo-name", repository.getName());
-//                        final GitHubUser owner = repository.getOwner();
-//                        test.assertNotNull(owner);
-//                        test.assertNotNullAndNotEmpty(owner.getLogin());
-//                        test.assertEqual(owner.getLogin() + "/fake-repo-name", repository.getFullName());
-//
-//                        final Iterable<GitHubRepository> authenticatedUserRepositories = gitHubClient.getRepositoriesForAuthenticatedUser().await();
-//                        test.assertTrue(authenticatedUserRepositories.contains((GitHubRepository existingRepository) -> Strings.equal(existingRepository.getFullName(), repository.getFullName())));
-//                    }
-//                    finally
-//                    {
-//                        gitHubClient.deleteRepository(DeleteRepositoryParameters.create()
-//                            .setOwner(repository.getOwner().getLogin())
-//                            .setName(repository.getName()))
-//                            .await();
-//                    }
-//                });
-//            });
-//
+            runner.testGroup("getRepository(GetRepositoryParameters)", () ->
+            {
+                final Action2<GetRepositoryParameters,Throwable> getRepositoryErrorTest = (GetRepositoryParameters parameters, Throwable expected) ->
+                {
+                    runner.test("with " + parameters, (Test test) ->
+                    {
+                        final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                        test.assertThrows(() -> gitHubClient.getRepository(parameters).await(), expected);
+                    });
+                };
+
+                getRepositoryErrorTest.run(null, new PreConditionFailure("parameters cannot be null."));
+                getRepositoryErrorTest.run(GetRepositoryParameters.create(), new PreConditionFailure("parameters.getOwner() cannot be null."));
+                getRepositoryErrorTest.run(GetRepositoryParameters.create().setOwner("fake-owner"), new PreConditionFailure("parameters.getName() cannot be null."));
+                getRepositoryErrorTest.run(GetRepositoryParameters.create().setName("fake-name"), new PreConditionFailure("parameters.getOwner() cannot be null."));
+
+                runner.test("with non-existing repository when not authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
+                        .setOwner("fake-owner")
+                        .setName("fake-repo");
+                    try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(404, response.getStatusCode());
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertEqual("Not Found", errorResponse.getMessage());
+                        test.assertEqual("https://docs.github.com/rest/reference/repos#get-a-repository", errorResponse.getDocumentationUrl());
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with existing public repository when not authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
+                        .setOwner("octokit")
+                        .setName("octokit.net");
+                    try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(200, response.getStatusCode());
+                        test.assertFalse(response.isErrorResponse());
+                        final GitHubRepository repository = response.getRepository().await();
+                        test.assertNotNull(repository);
+                        test.assertEqual("octokit", repository.getOwner().getLogin());
+                        test.assertEqual("octokit.net", repository.getName());
+                        test.assertEqual("octokit/octokit.net", repository.getFullName());
+                    }
+                });
+
+                runner.test("with non-existing repository and invalid token", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
+                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
+                        .setOwner("fake-owner")
+                        .setName("fake-repo");
+                    try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
+                    {
+                        test.assertEqual(401, response.getStatusCode());
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertEqual("Bad credentials", errorResponse.getMessage());
+                        test.assertEqual("https://docs.github.com/rest", errorResponse.getDocumentationUrl());
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with existing public repository and invalid token", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
+                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
+                        .setOwner("octokit")
+                        .setName("octokit.net");
+                    try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
+                    {
+                        test.assertEqual(401, response.getStatusCode());
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertEqual("Bad credentials", errorResponse.getMessage());
+                        test.assertEqual("https://docs.github.com/rest", errorResponse.getDocumentationUrl());
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with non-existing repository when authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
+                        .setOwner("fake-owner")
+                        .setName("fake-repo");
+                    try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(404, response.getStatusCode());
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertEqual("Not Found", errorResponse.getMessage());
+                        test.assertEqual("https://docs.github.com/rest/reference/repos#get-a-repository", errorResponse.getDocumentationUrl());
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with existing public repository when authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    final GetRepositoryParameters parameters = GetRepositoryParameters.create()
+                        .setOwner("octokit")
+                        .setName("octokit.net");
+                    try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(200, response.getStatusCode());
+                        test.assertFalse(response.isErrorResponse());
+                        final GitHubRepository repository = response.getRepository().await();
+                        test.assertNotNull(repository);
+                        test.assertEqual("octokit", repository.getOwner().getLogin());
+                        test.assertEqual("octokit.net", repository.getName());
+                        test.assertEqual("octokit/octokit.net", repository.getFullName());
+                    }
+                });
+            });
+
+            runner.testGroup("getRepositoriesForAuthenticatedUser()", () ->
+            {
+                runner.test("when not authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    try (final GetRepositoriesForAuthenticatedUserResponse response = gitHubClient.getRepositoriesForAuthenticatedUser().await())
+                    {
+                        test.assertNotNull(response);
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(401, 403), statusCode);
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        switch (statusCode)
+                        {
+                            case 401:
+                                test.assertEqual("Requires authentication", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/reference/repos#list-repositories-for-the-authenticated-user", errorResponse.getDocumentationUrl());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                break;
+
+                            case 403:
+                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+                                break;
+
+                            default:
+                                test.fail("Unexpected status code");
+                                break;
+                        }
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with invalid personal access token", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
+                    try (final GetRepositoriesForAuthenticatedUserResponse response = gitHubClient.getRepositoriesForAuthenticatedUser().await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(401, response.getStatusCode());
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertEqual("Bad credentials", errorResponse.getMessage());
+                        test.assertEqual("https://docs.github.com/rest", errorResponse.getDocumentationUrl());
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("when authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    try (final GetRepositoriesForAuthenticatedUserResponse response = gitHubClient.getRepositoriesForAuthenticatedUser().await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(200, response.getStatusCode());
+                        test.assertFalse(response.isErrorResponse());
+                        final Iterable<GitHubRepository> repositories = response.getRepositories().await();
+                        test.assertNotNull(repositories);
+                    }
+                });
+            });
+
+            runner.testGroup("createRepository(CreateRepositoryParameters)", () ->
+            {
+                final Action2<CreateRepositoryParameters,Throwable> createRepositoryErrorTest = (CreateRepositoryParameters parameters, Throwable expected) ->
+                {
+                    runner.test("with " + parameters, (Test test) ->
+                    {
+                        final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                        test.assertThrows(() -> gitHubClient.createRepository(parameters),
+                            expected);
+                    });
+                };
+
+                createRepositoryErrorTest.run(null, new PreConditionFailure("parameters cannot be null."));
+                createRepositoryErrorTest.run(CreateRepositoryParameters.create(), new PreConditionFailure("parameters.getName() cannot be null."));
+
+                runner.test("when not authenticated", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
+                        .setName("fake-repo-name");
+                    try (final CreateRepositoryResponse response = gitHubClient.createRepository(parameters).await())
+                    {
+                        test.assertNotNull(response);
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(401, 403), statusCode);
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        switch (statusCode)
+                        {
+                            case 401:
+                                test.assertEqual("Requires authentication", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/reference/repos#create-a-repository-for-the-authenticated-user", errorResponse.getDocumentationUrl());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                break;
+
+                            case 403:
+                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+                                break;
+
+                            default:
+                                test.fail("Unexpected status code");
+                                break;
+                        }
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with invalid personal access token", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
+                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
+                        .setName("fake-repo-name");
+                    try (final CreateRepositoryResponse response = gitHubClient.createRepository(parameters).await())
+                    {
+                        test.assertEqual(401, response.getStatusCode());
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertEqual("Bad credentials", errorResponse.getMessage());
+                        test.assertEqual("https://docs.github.com/rest", errorResponse.getDocumentationUrl());
+                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with repository that already exists", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
+                        .setName("github-java");
+                    try (final CreateRepositoryResponse response = gitHubClient.createRepository(parameters).await())
+                    {
+                        test.assertEqual(422, response.getStatusCode());
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertEqual("Repository creation failed.", errorResponse.getMessage());
+                        test.assertEqual("https://docs.github.com/rest/reference/repos#create-a-repository-for-the-authenticated-user", errorResponse.getDocumentationUrl());
+                        test.assertEqual(
+                            Iterable.create(
+                                GitHubError.create()
+                                    .setResource("Repository")
+                                    .setCode("custom")
+                                    .setField("name")
+                                    .setMessage("name already exists on this account")
+                            ),
+                            errorResponse.getErrors());
+                    }
+                });
+
+                runner.test("with repository name that doesn't exist", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    String repositoryOwner = null;
+                    final String repositoryName = "fake-repo-name";
+                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
+                        .setName(repositoryName);
+                    try (final CreateRepositoryResponse response = gitHubClient.createRepository(parameters).await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(201, response.getStatusCode());
+                        test.assertFalse(response.isErrorResponse());
+                        final GitHubRepository repository = response.getRepository().await();
+                        test.assertEqual(repositoryName, repository.getName());
+                        final GitHubUser owner = repository.getOwner();
+                        test.assertNotNull(owner);
+                        repositoryOwner = owner.getLogin();
+                        test.assertNotNullAndNotEmpty(repositoryOwner);
+                        test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
+
+                        try (final GetRepositoriesForAuthenticatedUserResponse repositoriesResponse = gitHubClient.getRepositoriesForAuthenticatedUser().await())
+                        {
+                            final Iterable<GitHubRepository> authenticatedUserRepositories = repositoriesResponse.getRepositories().await();
+                            test.assertTrue(authenticatedUserRepositories.contains((GitHubRepository existingRepository) ->
+                            {
+                                return Strings.equal(existingRepository.getFullName(), repository.getFullName());
+                            }));
+                        }
+                    }
+                    finally
+                    {
+                        if (!Strings.isNullOrEmpty(repositoryOwner))
+                        {
+                            gitHubClient.deleteRepository(DeleteRepositoryParameters.create()
+                                .setOwner(repositoryOwner)
+                                .setName(repositoryName))
+                                .await()
+                                .dispose().await();
+                        }
+                    }
+                });
+            });
+
 //            runner.testGroup("deleteRepository(DeleteRepositoryParameters)", () ->
 //            {
 //                final Action2<DeleteRepositoryParameters,Throwable> deleteRepositoryErrorTest = (DeleteRepositoryParameters parameters, Throwable expected) ->
 //                {
 //                    runner.test("with " + parameters, (Test test) ->
 //                    {
-//                        final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
+//                        final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
 //                        test.assertThrows(() -> gitHubClient.deleteRepository(parameters),
 //                            expected);
 //                    });
@@ -440,7 +504,7 @@ public interface GitHubClientTests
 //
 //                runner.test("with non-existing repository when not authenticated", (Test test) ->
 //                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
+//                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
 //                    final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
 //                        .setOwner("fake-owner")
 //                        .setName("fake-repo-name");
@@ -469,7 +533,7 @@ public interface GitHubClientTests
 //
 //                runner.test("with existing repository when not authenticated", (Test test) ->
 //                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.None);
+//                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
 //                    final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
 //                        .setOwner("danschultequb")
 //                        .setName("github-java");
@@ -491,7 +555,7 @@ public interface GitHubClientTests
 //
 //                runner.test("with invalid personal access token", (Test test) ->
 //                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Invalid);
+//                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
 //                    final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
 //                        .setOwner("fake-owner")
 //                        .setName("fake-repo-name");
@@ -504,7 +568,7 @@ public interface GitHubClientTests
 //
 //                runner.test("with non-existing repository when authenticated", (Test test) ->
 //                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
+//                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
 //                    final String authenticatedUserLogin = gitHubClient.getAuthenticatedUser().await().getLogin();
 //                    final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
 //                        .setOwner(authenticatedUserLogin)
@@ -518,7 +582,7 @@ public interface GitHubClientTests
 //
 //                runner.test("with existing repository when authenticated", (Test test) ->
 //                {
-//                    final GitHubClient gitHubClient = creator.run(PersonalAccessTokenType.Valid);
+//                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
 //                    final GitHubRepository repository = gitHubClient.createRepository(CreateRepositoryParameters.create()
 //                        .setName("fake-repo-name"))
 //                        .await();

@@ -89,42 +89,109 @@ public interface GitHubClient
      * @param parameters The parameters that describe the repository to return.
      * @return The matching repository.
      */
-    // Result<GitHubRepository> getRepository(GetRepositoryParameters parameters);
+    default Result<GetRepositoryResponse> getRepository(GetRepositoryParameters parameters)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+        PreCondition.assertNotNullAndNotEmpty(parameters.getOwner(), "parameters.getOwner()");
+        PreCondition.assertNotNullAndNotEmpty(parameters.getName(), "parameters.getName()");
+
+        return Result.create(() ->
+        {
+            final GitHubRequest gitHubRequest = GitHubRequest.create()
+                .setHttpMethod(HttpMethod.GET)
+                .setUrlPath("/repos/" + parameters.getOwner() + "/" + parameters.getName());
+            final GitHubResponse gitHubResponse = this.send(gitHubRequest).await();
+            final GetRepositoryResponse result = GetRepositoryResponse.create(gitHubResponse);
+
+            PostCondition.assertNotNull(result, "result");
+
+            return result;
+        });
+    }
 
     /**
      * Get the repositories the authenticated user has permission to access.
      * @return The repositories the authenticated user has permission to access.
      */
-    // Result<Iterable<GitHubRepository>> getRepositoriesForAuthenticatedUser();
+    default Result<GetRepositoriesForAuthenticatedUserResponse> getRepositoriesForAuthenticatedUser()
+    {
+        return Result.create(() ->
+        {
+            final GitHubRequest gitHubRequest = GitHubRequest.create()
+                .setHttpMethod(HttpMethod.GET)
+                .setUrlPath("/user/repos");
+            final GitHubResponse gitHubResponse = this.send(gitHubRequest).await();
+            final GetRepositoriesForAuthenticatedUserResponse result = GetRepositoriesForAuthenticatedUserResponse.create(gitHubResponse);
+
+            PostCondition.assertNotNull(result, "result");
+
+            return result;
+        });
+    }
 
     /**
      * Create a new repository.
      * @param parameters The parameters for the request.
      * @return The newly created repository.
      */
-    // Result<GitHubRepository> createRepository(CreateRepositoryParameters parameters);
+    default Result<CreateRepositoryResponse> createRepository(CreateRepositoryParameters parameters)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+        PreCondition.assertNotNullAndNotEmpty(parameters.getName(), "parameters.getName()");
+
+        return Result.create(() ->
+        {
+            final GitHubRequest gitHubRequest = GitHubRequest.create()
+                .setHttpMethod(HttpMethod.POST)
+                .setUrlPath("/user/repos")
+                .setBody(parameters.toJson()).await();
+            final GitHubResponse gitHubResponse = this.send(gitHubRequest).await();
+            final CreateRepositoryResponse result = CreateRepositoryResponse.create(gitHubResponse);
+
+            PostCondition.assertNotNull(result, "result");
+
+            return result;
+        });
+    }
 
     /**
      * Delete an existing repository.
      * @param parameters The parameters for the request.
      * @return The result of deleting the repository.
      */
-    // Result<Void> deleteRepository(DeleteRepositoryParameters parameters);
+    default Result<GitHubResponse> deleteRepository(DeleteRepositoryParameters parameters)
+    {
+        PreCondition.assertNotNull(parameters, "parameters");
+        PreCondition.assertNotNullAndNotEmpty(parameters.getOwner(), "parameters.getOwner()");
+        PreCondition.assertNotNullAndNotEmpty(parameters.getName(), "parameters.getName()");
+
+        return Result.create(() ->
+        {
+            final GitHubRequest gitHubRequest = GitHubRequest.create()
+                .setHttpMethod(HttpMethod.DELETE)
+                .setUrlPath("/repos/" + parameters.getOwner() + "/" + parameters.getName());
+            final GitHubResponse result = this.send(gitHubRequest).await();
+
+            PostCondition.assertNotNull(result, "result");
+
+            return result;
+        });
+    }
 
     /**
      * Delete an existing repository.
      * @param repository The repository to delete.
      * @return The result of deleting the repository.
      */
-//    default Result<Void> deleteRepository(GitHubRepository repository)
-//    {
-//        PreCondition.assertNotNull(repository, "repository");
-//        PreCondition.assertNotNull(repository.getOwner(), "repository.getOwner()");
-//        PreCondition.assertNotNullAndNotEmpty(repository.getOwner().getLogin(), "repository.getOwner().getLogin()");
-//        PreCondition.assertNotNullAndNotEmpty(repository.getName(), "repository.getName()");
-//
-//        return this.deleteRepository(DeleteRepositoryParameters.create()
-//            .setOwner(repository.getOwner().getLogin())
-//            .setName(repository.getName()));
-//    }
+    default Result<GitHubResponse> deleteRepository(GitHubRepository repository)
+    {
+        PreCondition.assertNotNull(repository, "repository");
+        PreCondition.assertNotNull(repository.getOwner(), "repository.getOwner()");
+        PreCondition.assertNotNullAndNotEmpty(repository.getOwner().getLogin(), "repository.getOwner().getLogin()");
+        PreCondition.assertNotNullAndNotEmpty(repository.getName(), "repository.getName()");
+
+        return this.deleteRepository(DeleteRepositoryParameters.create()
+            .setOwner(repository.getOwner().getLogin())
+            .setName(repository.getName()));
+    }
 }

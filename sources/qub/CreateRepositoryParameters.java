@@ -70,9 +70,9 @@ public class CreateRepositoryParameters extends JSONObjectWrapperBase
      * Get whether or not the repository to create will be private.
      * @return Whether or not the repository to create will be private.
      */
-    public String getPrivate()
+    public Boolean getPrivate()
     {
-        return this.toJson().getString(CreateRepositoryParameters.privatePropertyName)
+        return this.toJson().getBoolean(CreateRepositoryParameters.privatePropertyName)
             .catchError()
             .await();
     }

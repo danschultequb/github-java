@@ -12,12 +12,7 @@ public class GetRepositoryParameters extends JSONObjectWrapperBase
 
     public static GetRepositoryParameters create()
     {
-        return GetRepositoryParameters.create(JSONObject.create());
-    }
-
-    public static GetRepositoryParameters create(JSONObject json)
-    {
-        return new GetRepositoryParameters(json);
+        return new GetRepositoryParameters(JSONObject.create());
     }
 
     public String getOwner()
