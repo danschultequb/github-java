@@ -64,7 +64,7 @@ public class BasicGitHubClient implements GitHubClient
     }
 
     @Override
-    public Result<GitHubResponse> send(GitHubRequest request)
+    public Result<GitHubResponse> sendRequest(GitHubRequest request)
     {
         PreCondition.assertNotNull(request, "request");
         PreCondition.assertNotNullAndNotEmpty(request.getHttpMethod(), "request.getHttpMethod()");
