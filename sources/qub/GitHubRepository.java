@@ -8,6 +8,7 @@ public class GitHubRepository extends JSONObjectWrapperBase
     private static final String namePropertyName = "name";
     private static final String fullNamePropertyName = "full_name";
     private static final String ownerPropertyName = "owner";
+    private static final String gitUrlPropertyName = "git_url";
 
     protected GitHubRepository(JSONObject json)
     {
@@ -105,6 +106,32 @@ public class GitHubRepository extends JSONObjectWrapperBase
         PreCondition.assertNotNull(owner, "owner");
 
         this.toJson().setObject(GitHubRepository.ownerPropertyName, owner.toJson());
+
+        return this;
+    }
+
+    /**
+     * Get the git-specific URL for this repository.
+     * @return The git-specific URL for this repository.
+     */
+    public URL getGitUrl()
+    {
+        return this.toJson().getString(GitHubRepository.gitUrlPropertyName)
+            .then((String gitUrlString) -> URL.parse(gitUrlString).await())
+            .catchError()
+            .await();
+    }
+
+    /**
+     * Set the git-specific URL for this repository.
+     * @param gitUrl The git-specific URL for this repository.
+     * @return This object for method chaining.
+     */
+    public GitHubRepository setGitUrl(URL gitUrl)
+    {
+        PreCondition.assertNotNull(gitUrl, "gitUrl");
+
+        this.toJson().setString(GitHubRepository.gitUrlPropertyName, gitUrl.toString(true));
 
         return this;
     }

@@ -373,9 +373,10 @@ public interface GitHubClientTests
                                 test.assertEqual("Not Found", errorResponse.getMessage());
                                 test.assertEqual("https://docs.github.com/rest/reference/repos#get-a-repository", errorResponse.getDocumentationUrl());
                                 test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                break;
 
                             default:
-                                test.fail("Unexpected status code");
+                                test.fail("Unexpected status code: " + statusCode);
                                 break;
                         }
                     }
@@ -1006,12 +1007,28 @@ public interface GitHubClientTests
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(parameters).await())
                     {
                         test.assertNotNull(response);
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(204, 404), statusCode);
+                        switch (statusCode)
+                        {
+                            case 204:
+                                test.assertEqual(JSONObject.create(), response.getBodyJson().await());
+                                break;
+
+                            case 404:
+                                test.assertTrue(response.isErrorResponse());
+                                final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                                test.assertEqual("Not Found", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", errorResponse.getDocumentationUrl());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                break;
+
+                            default:
+                                test.fail("Unexpected status code: " + statusCode);
+                                break;
+                        }
                         test.assertEqual(404, response.getStatusCode());
-                        test.assertTrue(response.isErrorResponse());
-                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
-                        test.assertEqual("Not Found", errorResponse.getMessage());
-                        test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", errorResponse.getDocumentationUrl());
-                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+
                     }
                 });
 
@@ -1130,7 +1147,7 @@ public interface GitHubClientTests
 
                             case 404:
                                 test.assertEqual("Not Found", errorResponse.getMessage());
-                                test.assertEqual("d", errorResponse.getDocumentationUrl());
+                                test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", errorResponse.getDocumentationUrl());
                                 break;
 
                             default:

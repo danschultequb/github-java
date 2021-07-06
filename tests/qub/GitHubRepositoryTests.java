@@ -13,6 +13,7 @@ public interface GitHubRepositoryTests
                 test.assertNull(repository.getName());
                 test.assertNull(repository.getFullName());
                 test.assertNull(repository.getOwner());
+                test.assertNull(repository.getGitUrl());
                 test.assertEqual(JSONObject.create(), repository.toJson());
             });
 
@@ -29,12 +30,14 @@ public interface GitHubRepositoryTests
                     final JSONObject json = JSONObject.create()
                         .setString("name", "fake-name")
                         .setString("full_name", "fake-full-name")
-                        .setObject("owner", JSONObject.create());
+                        .setObject("owner", JSONObject.create())
+                        .setString("git_url", "git://hello/there");
                     final GitHubRepository repository = GitHubRepository.create(json);
                     test.assertNotNull(repository);
                     test.assertEqual("fake-name", repository.getName());
                     test.assertEqual("fake-full-name", repository.getFullName());
                     test.assertEqual(GitHubUser.create(), repository.getOwner());
+                    test.assertEqual(URL.parse("git://hello/there").await(), repository.getGitUrl());
                     test.assertSame(json, repository.toJson());
                 });
             });
@@ -138,6 +141,25 @@ public interface GitHubRepositoryTests
 
                 setOwnerTest.run(GitHubUser.create());
                 setOwnerTest.run(GitHubUser.create().setLogin("fake-owner"));
+            });
+
+            runner.testGroup("setGitUrl(URL)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final GitHubRepository repository = GitHubRepository.create();
+                    test.assertThrows(() -> repository.setGitUrl(null),
+                        new PreConditionFailure("gitUrl cannot be null."));
+                    test.assertNull(repository.getGitUrl());
+                });
+
+                runner.test("with non-null", (Test test) ->
+                {
+                    final GitHubRepository repository = GitHubRepository.create();
+                    final GitHubRepository setGitUrlResult = repository.setGitUrl(URL.parse("git://hello/there").await());
+                    test.assertSame(repository, setGitUrlResult);
+                    test.assertEqual(URL.parse("git://hello/there").await(), repository.getGitUrl());
+                });
             });
         });
     }
