@@ -125,6 +125,103 @@ public interface GitHubClientTests
                 setBaseUrlTest.run("my.github.base.url");
             });
 
+            runner.testGroup("sendRequest(GitHubRequest)", () ->
+            {
+                runner.test("with null", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    test.assertThrows(() -> gitHubClient.sendRequest(null),
+                        new PreConditionFailure("request cannot be null."));
+                });
+
+                runner.test("with empty request", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final GitHubRequest request = GitHubRequest.create();
+                    test.assertThrows(() -> gitHubClient.sendRequest(request),
+                        new PreConditionFailure("request.getHttpMethod() cannot be null."));
+                });
+
+                runner.test("with no URL path", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final GitHubRequest request = GitHubRequest.create()
+                        .setHttpMethod(HttpMethod.GET);
+                    test.assertThrows(() -> gitHubClient.sendRequest(request),
+                        new PreConditionFailure("request.getUrlPath() cannot be null."));
+                });
+
+                runner.test("with URL path", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final GitHubRequest request = GitHubRequest.create()
+                        .setHttpMethod(HttpMethod.GET)
+                        .setUrlPath("/user");
+                    try (final GitHubResponse response = gitHubClient.sendRequest(request).await())
+                    {
+                        test.assertNotNull(response);
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(401, 403), statusCode);
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertNotNull(errorResponse);
+                        switch (statusCode)
+                        {
+                            case 401:
+                                test.assertEqual("Requires authentication", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", errorResponse.getDocumentationUrl());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                break;
+
+                            case 403:
+                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+                                break;
+
+                            default:
+                                test.fail("Unexpected status code: " + statusCode);
+                                break;
+                        }
+                    }
+                });
+
+                runner.test("with base url", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
+                    final GitHubRequest request = GitHubRequest.create()
+                        .setHttpMethod(HttpMethod.GET)
+                        .setBaseUrl(URL.parse("https://api.github.com").await())
+                        .setUrlPath("/user");
+                    try (final GitHubResponse response = gitHubClient.sendRequest(request).await())
+                    {
+                        test.assertNotNull(response);
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(401, 403), statusCode);
+                        test.assertTrue(response.isErrorResponse());
+                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                        test.assertNotNull(errorResponse);
+                        switch (statusCode)
+                        {
+                            case 401:
+                                test.assertEqual("Requires authentication", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", errorResponse.getDocumentationUrl());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                break;
+
+                            case 403:
+                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+                                break;
+
+                            default:
+                                test.fail("Unexpected status code: " + statusCode);
+                                break;
+                        }
+
+                    }
+                });
+            });
+
             runner.testGroup("sendGetAuthenticatedUserRequest()", () ->
             {
                 runner.test("when not authenticated", (Test test) ->
@@ -133,13 +230,29 @@ public interface GitHubClientTests
                     try (final GetAuthenticatedUserResponse response = gitHubClient.sendGetAuthenticatedUserRequest().await())
                     {
                         test.assertNotNull(response);
-                        test.assertEqual(401, response.getStatusCode());
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(401, 403), statusCode);
                         test.assertTrue(response.isErrorResponse());
                         final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
                         test.assertNotNull(errorResponse);
-                        test.assertEqual("Requires authentication", errorResponse.getMessage());
-                        test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", errorResponse.getDocumentationUrl());
-                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                        switch (statusCode)
+                        {
+                            case 401:
+                                test.assertEqual("Requires authentication", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", errorResponse.getDocumentationUrl());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                break;
+
+                            case 403:
+                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+                                break;
+
+                            default:
+                                test.fail("Unexpected status code: " + statusCode);
+                                break;
+                        }
+
                     }
                 });
 
@@ -179,10 +292,25 @@ public interface GitHubClientTests
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
                     final GitHubException exception = test.assertThrows(GitHubException.class, () -> gitHubClient.getAuthenticatedUser().await());
-                    test.assertEqual(401, exception.getStatusCode());
-                    test.assertEqual("Requires authentication", exception.getMessage());
-                    test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", exception.getDocumentationUrl());
-                    test.assertEqual(Iterable.create(), exception.getErrors());
+                    final int statusCode = exception.getStatusCode();
+                    test.assertOneOf(Iterable.create(401, 403), statusCode);
+                    switch (statusCode)
+                    {
+                        case 401:
+                            test.assertEqual("Requires authentication", exception.getMessage());
+                            test.assertEqual("https://docs.github.com/rest/reference/users#get-the-authenticated-user", exception.getDocumentationUrl());
+                            test.assertEqual(Iterable.create(), exception.getErrors());
+                            break;
+
+                        case 403:
+                            test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", exception.getMessage());
+                            test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", exception.getDocumentationUrl());
+                            break;
+
+                        default:
+                            test.fail("Unexpected status code: " + statusCode);
+                            break;
+                    }
                 });
 
                 runner.test("with invalid personal access token", (Test test) ->
@@ -229,12 +357,27 @@ public interface GitHubClientTests
                     try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
                     {
                         test.assertNotNull(response);
-                        test.assertEqual(404, response.getStatusCode());
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(403, 404), statusCode);
                         test.assertTrue(response.isErrorResponse());
                         final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
-                        test.assertEqual("Not Found", errorResponse.getMessage());
-                        test.assertEqual("https://docs.github.com/rest/reference/repos#get-a-repository", errorResponse.getDocumentationUrl());
-                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                        switch (statusCode)
+                        {
+                            case 403:
+                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+                                break;
+
+                            case 404:
+                                test.assertEqual(404, response.getStatusCode());
+                                test.assertEqual("Not Found", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/reference/repos#get-a-repository", errorResponse.getDocumentationUrl());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+
+                            default:
+                                test.fail("Unexpected status code");
+                                break;
+                        }
                     }
                 });
 
@@ -247,13 +390,30 @@ public interface GitHubClientTests
                     try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
                     {
                         test.assertNotNull(response);
-                        test.assertEqual(200, response.getStatusCode());
-                        test.assertFalse(response.isErrorResponse());
-                        final GitHubRepository repository = response.getRepository().await();
-                        test.assertNotNull(repository);
-                        test.assertEqual("octokit", repository.getOwner().getLogin());
-                        test.assertEqual("octokit.net", repository.getName());
-                        test.assertEqual("octokit/octokit.net", repository.getFullName());
+                        final int statusCode = response.getStatusCode();
+                        test.assertOneOf(Iterable.create(200, 403), statusCode);
+                        switch (statusCode)
+                        {
+                            case 200:
+                                test.assertFalse(response.isErrorResponse());
+                                final GitHubRepository repository = response.getRepository().await();
+                                test.assertNotNull(repository);
+                                test.assertEqual("octokit", repository.getOwner().getLogin());
+                                test.assertEqual("octokit.net", repository.getName());
+                                test.assertEqual("octokit/octokit.net", repository.getFullName());
+                                break;
+
+                            case 403:
+                                test.assertTrue(response.isErrorResponse());
+                                final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
+                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+                                break;
+
+                            default:
+                                test.fail("Unexpected status code");
+                                break;
+                        }
                     }
                 });
 
@@ -565,6 +725,50 @@ public interface GitHubClientTests
                         }
                     }
                 });
+
+
+
+                runner.test("with repository name that doesn't exist", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    String repositoryOwner = null;
+                    final String repositoryName = "fake-repo-name";
+                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
+                        .setName(repositoryName);
+                    try (final CreateRepositoryResponse response = gitHubClient.sendCreateRepositoryRequest(parameters).await())
+                    {
+                        test.assertNotNull(response);
+                        test.assertEqual(201, response.getStatusCode());
+                        test.assertFalse(response.isErrorResponse());
+                        final GitHubRepository repository = response.getRepository().await();
+                        test.assertEqual(repositoryName, repository.getName());
+                        final GitHubUser owner = repository.getOwner();
+                        test.assertNotNull(owner);
+                        repositoryOwner = owner.getLogin();
+                        test.assertNotNullAndNotEmpty(repositoryOwner);
+                        test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
+
+                        try (final GetRepositoriesForAuthenticatedUserResponse repositoriesResponse = gitHubClient.sendGetRepositoriesForAuthenticatedUserRequest().await())
+                        {
+                            final Iterable<GitHubRepository> authenticatedUserRepositories = repositoriesResponse.getRepositories().await();
+                            test.assertTrue(authenticatedUserRepositories.contains((GitHubRepository existingRepository) ->
+                            {
+                                return Strings.equal(existingRepository.getFullName(), repository.getFullName());
+                            }));
+                        }
+                    }
+                    finally
+                    {
+                        if (!Strings.isNullOrEmpty(repositoryOwner))
+                        {
+                            gitHubClient.sendDeleteRepositoryRequest(DeleteRepositoryParameters.create()
+                                .setOwner(repositoryOwner)
+                                .setName(repositoryName))
+                                .await()
+                                .dispose().await();
+                        }
+                    }
+                });
             });
 
             runner.testGroup("createRepository(CreateRepositoryParameters)", () ->
@@ -640,6 +844,35 @@ public interface GitHubClientTests
                                 .setMessage("name already exists on this account")
                         ),
                         exception.getErrors());
+                });
+
+                runner.test("with repository name that doesn't exist", (Test test) ->
+                {
+                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
+                    String repositoryOwner = null;
+                    final String repositoryName = "fake-repo-name";
+                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
+                        .setName(repositoryName);
+                    final GitHubRepository repository = gitHubClient.createRepository(parameters).await();
+                    try
+                    {
+                        test.assertEqual(repositoryName, repository.getName());
+                        final GitHubUser owner = repository.getOwner();
+                        test.assertNotNull(owner);
+                        repositoryOwner = owner.getLogin();
+                        test.assertNotNullAndNotEmpty(repositoryOwner);
+                        test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
+
+                        final Iterable<GitHubRepository> authenticatedUserRepositories = gitHubClient.getRepositoriesForAuthenticatedUser().await();
+                        test.assertTrue(authenticatedUserRepositories.contains((GitHubRepository existingRepository) ->
+                        {
+                            return Strings.equal(existingRepository.getFullName(), repository.getFullName());
+                        }));
+                    }
+                    finally
+                    {
+                        gitHubClient.deleteRepository(repository).await();
+                    }
                 });
 
                 runner.test("with repository name that doesn't exist", (Test test) ->
@@ -896,7 +1129,7 @@ public interface GitHubClientTests
                                 break;
 
                             case 404:
-                                test.assertEqual("c", errorResponse.getMessage());
+                                test.assertEqual("Not Found", errorResponse.getMessage());
                                 test.assertEqual("d", errorResponse.getDocumentationUrl());
                                 break;
 
@@ -1144,19 +1377,23 @@ public interface GitHubClientTests
                             .setLogin("fake-owner"))
                         .setName("fake-repo-name");
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(repository).await(), GitHubException.class);
+                    final int statusCode = exception.getStatusCode();
+                    test.assertOneOf(Iterable.create(403, 404), statusCode);
+                    switch (statusCode)
                     {
-                        test.assertEqual(403, exception.getStatusCode());
-                        test.assertOneOf(
-                            Iterable.create(
-                                "Must have admin rights to Repository.",
-                                "API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)"),
-                            exception.getMessage());
-                        test.assertOneOf(
-                            Iterable.create(
-                                "https://docs.github.com/rest/reference/repos#delete-a-repository",
-                                "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"),
-                            exception.getDocumentationUrl());
-                        test.assertEqual(Iterable.create(), exception.getErrors());
+                        case 403:
+                            test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", exception.getMessage());
+                            test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", exception.getDocumentationUrl());
+                            break;
+
+                        case 404:
+                            test.assertEqual("Not Found", exception.getMessage());
+                            test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", exception.getDocumentationUrl());
+                            break;
+
+                        default:
+                            test.fail("Unexpected status code");
+                            break;
                     }
                 });
 
