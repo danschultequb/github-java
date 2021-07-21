@@ -248,7 +248,7 @@ public interface GitHubRequestTests
 
                 getHeaderValueErrorTest.run(null, new PreConditionFailure("headerName cannot be null."));
                 getHeaderValueErrorTest.run("", new PreConditionFailure("headerName cannot be empty."));
-                getHeaderValueErrorTest.run("hello", new NotFoundException("hello"));
+                getHeaderValueErrorTest.run("hello", new NotFoundException("No \"hello\" header found."));
 
                 final Action3<HttpHeaders,String,String> getHeaderValueTest = (HttpHeaders headers, String headerName, String expected) ->
                 {
