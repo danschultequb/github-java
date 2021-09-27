@@ -2,6 +2,12 @@ package qub;
 
 public interface GitHubClientTests
 {
+    IntegerValue fakeRepositoryCount = IntegerValue.create(0);
+    static String getFakeRepositoryName()
+    {
+        return "fake-repo-name-" + fakeRepositoryCount.incrementAndGetAsInt();
+    }
+
     static void test(TestRunner runner)
     {
         runner.testGroup(GitHubClient.class, () ->
@@ -51,7 +57,9 @@ public interface GitHubClientTests
         PreCondition.assertNotNull(runner, "runner");
         PreCondition.assertNotNull(creator, "creator");
 
-        runner.testGroup(GitHubClient.class, () ->
+        runner.testGroup(GitHubClient.class,
+            (TestResources resources) -> Tuple.create(resources.getClock()),
+            (Clock clock) ->
         {
             runner.testGroup("setAccessToken(String)", () ->
             {
@@ -353,7 +361,7 @@ public interface GitHubClientTests
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
                     final GetRepositoryParameters parameters = GetRepositoryParameters.create()
                         .setOwner("fake-owner")
-                        .setName("fake-repo");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
                     {
                         test.assertNotNull(response);
@@ -423,7 +431,7 @@ public interface GitHubClientTests
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
                     final GetRepositoryParameters parameters = GetRepositoryParameters.create()
                         .setOwner("fake-owner")
-                        .setName("fake-repo");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
                     {
                         test.assertEqual(401, response.getStatusCode());
@@ -457,7 +465,7 @@ public interface GitHubClientTests
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
                     final GetRepositoryParameters parameters = GetRepositoryParameters.create()
                         .setOwner("fake-owner")
-                        .setName("fake-repo");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GetRepositoryResponse response = gitHubClient.getRepository(parameters).await())
                     {
                         test.assertNotNull(response);
@@ -616,7 +624,7 @@ public interface GitHubClientTests
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
                     final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final CreateRepositoryResponse response = gitHubClient.sendCreateRepositoryRequest(parameters).await())
                     {
                         test.assertNotNull(response);
@@ -649,7 +657,7 @@ public interface GitHubClientTests
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
                     final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final CreateRepositoryResponse response = gitHubClient.sendCreateRepositoryRequest(parameters).await())
                     {
                         test.assertEqual(401, response.getStatusCode());
@@ -688,8 +696,14 @@ public interface GitHubClientTests
                 runner.test("with repository name that doesn't exist", (Test test) ->
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    String repositoryOwner = null;
-                    final String repositoryName = "fake-repo-name";
+                    final String repositoryOwner = gitHubClient.getAuthenticatedUser().await().getLogin();
+                    final String repositoryName = GitHubClientTests.getFakeRepositoryName();
+                    final DeleteRepositoryParameters deleteParameters = DeleteRepositoryParameters.create()
+                        .setOwner(repositoryOwner)
+                        .setName(repositoryName);
+                    gitHubClient.deleteRepository(deleteParameters)
+                        .catchError()
+                        .await();
                     final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
                         .setName(repositoryName);
                     try (final CreateRepositoryResponse response = gitHubClient.sendCreateRepositoryRequest(parameters).await())
@@ -701,8 +715,7 @@ public interface GitHubClientTests
                         test.assertEqual(repositoryName, repository.getName());
                         final GitHubUser owner = repository.getOwner();
                         test.assertNotNull(owner);
-                        repositoryOwner = owner.getLogin();
-                        test.assertNotNullAndNotEmpty(repositoryOwner);
+                        test.assertEqual(repositoryOwner, owner.getLogin());
                         test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
 
                         try (final GetRepositoriesForAuthenticatedUserResponse repositoriesResponse = gitHubClient.sendGetRepositoriesForAuthenticatedUserRequest().await())
@@ -716,14 +729,10 @@ public interface GitHubClientTests
                     }
                     finally
                     {
-                        if (!Strings.isNullOrEmpty(repositoryOwner))
+                        GitHubClientTests.retry(clock, () ->
                         {
-                            gitHubClient.sendDeleteRepositoryRequest(DeleteRepositoryParameters.create()
-                                .setOwner(repositoryOwner)
-                                .setName(repositoryName))
-                                .await()
-                                .dispose().await();
-                        }
+                            gitHubClient.deleteRepository(deleteParameters).await();
+                        });
                     }
                 });
 
@@ -732,8 +741,14 @@ public interface GitHubClientTests
                 runner.test("with repository name that doesn't exist", (Test test) ->
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    String repositoryOwner = null;
-                    final String repositoryName = "fake-repo-name";
+                    final String repositoryOwner = gitHubClient.getAuthenticatedUser().await().getLogin();
+                    final String repositoryName = GitHubClientTests.getFakeRepositoryName();
+                    final DeleteRepositoryParameters deleteParameters = DeleteRepositoryParameters.create()
+                        .setOwner(repositoryOwner)
+                        .setName(repositoryName);
+                    gitHubClient.deleteRepository(deleteParameters)
+                        .catchError()
+                        .await();
                     final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
                         .setName(repositoryName);
                     try (final CreateRepositoryResponse response = gitHubClient.sendCreateRepositoryRequest(parameters).await())
@@ -745,8 +760,7 @@ public interface GitHubClientTests
                         test.assertEqual(repositoryName, repository.getName());
                         final GitHubUser owner = repository.getOwner();
                         test.assertNotNull(owner);
-                        repositoryOwner = owner.getLogin();
-                        test.assertNotNullAndNotEmpty(repositoryOwner);
+                        test.assertEqual(repositoryOwner, owner.getLogin());
                         test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
 
                         try (final GetRepositoriesForAuthenticatedUserResponse repositoriesResponse = gitHubClient.sendGetRepositoriesForAuthenticatedUserRequest().await())
@@ -760,14 +774,10 @@ public interface GitHubClientTests
                     }
                     finally
                     {
-                        if (!Strings.isNullOrEmpty(repositoryOwner))
+                        GitHubClientTests.retry(clock, () ->
                         {
-                            gitHubClient.sendDeleteRepositoryRequest(DeleteRepositoryParameters.create()
-                                .setOwner(repositoryOwner)
-                                .setName(repositoryName))
-                                .await()
-                                .dispose().await();
-                        }
+                            gitHubClient.deleteRepository(deleteParameters).await();
+                        });
                     }
                 });
             });
@@ -791,7 +801,7 @@ public interface GitHubClientTests
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
                     final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.createRepository(parameters).await(), GitHubException.class);
                     final int statusCode = exception.getStatusCode();
                     test.assertOneOf(Iterable.create(401, 403), statusCode);
@@ -819,7 +829,7 @@ public interface GitHubClientTests
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
                     final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.createRepository(parameters).await(), GitHubException.class);
                     test.assertEqual(401, exception.getStatusCode());
                     test.assertEqual("Bad credentials", exception.getMessage());
@@ -850,8 +860,12 @@ public interface GitHubClientTests
                 runner.test("with repository name that doesn't exist", (Test test) ->
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    String repositoryOwner = null;
-                    final String repositoryName = "fake-repo-name";
+                    final String repositoryName = GitHubClientTests.getFakeRepositoryName();
+                    gitHubClient.deleteRepository(DeleteRepositoryParameters.create()
+                        .setOwner(gitHubClient.getAuthenticatedUser().await().getLogin())
+                        .setName(repositoryName))
+                        .catchError()
+                        .await();
                     final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
                         .setName(repositoryName);
                     final GitHubRepository repository = gitHubClient.createRepository(parameters).await();
@@ -860,36 +874,7 @@ public interface GitHubClientTests
                         test.assertEqual(repositoryName, repository.getName());
                         final GitHubUser owner = repository.getOwner();
                         test.assertNotNull(owner);
-                        repositoryOwner = owner.getLogin();
-                        test.assertNotNullAndNotEmpty(repositoryOwner);
-                        test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
-
-                        final Iterable<GitHubRepository> authenticatedUserRepositories = gitHubClient.getRepositoriesForAuthenticatedUser().await();
-                        test.assertTrue(authenticatedUserRepositories.contains((GitHubRepository existingRepository) ->
-                        {
-                            return Strings.equal(existingRepository.getFullName(), repository.getFullName());
-                        }));
-                    }
-                    finally
-                    {
-                        gitHubClient.deleteRepository(repository).await();
-                    }
-                });
-
-                runner.test("with repository name that doesn't exist", (Test test) ->
-                {
-                    final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    String repositoryOwner = null;
-                    final String repositoryName = "fake-repo-name";
-                    final CreateRepositoryParameters parameters = CreateRepositoryParameters.create()
-                        .setName(repositoryName);
-                    final GitHubRepository repository = gitHubClient.createRepository(parameters).await();
-                    try
-                    {
-                        test.assertEqual(repositoryName, repository.getName());
-                        final GitHubUser owner = repository.getOwner();
-                        test.assertNotNull(owner);
-                        repositoryOwner = owner.getLogin();
+                        final String repositoryOwner = owner.getLogin();
                         test.assertNotNullAndNotEmpty(repositoryOwner);
                         test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
 
@@ -928,7 +913,7 @@ public interface GitHubClientTests
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
                     final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
                         .setOwner("fake-owner")
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(parameters).await())
                     {
                         final int statusCode = response.getStatusCode();
@@ -985,7 +970,7 @@ public interface GitHubClientTests
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
                     final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
                         .setOwner("fake-owner")
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(parameters).await())
                     {
                         test.assertEqual(401, response.getStatusCode());
@@ -1003,7 +988,7 @@ public interface GitHubClientTests
                     final String authenticatedUserLogin = gitHubClient.getAuthenticatedUser().await().getLogin();
                     final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
                         .setOwner(authenticatedUserLogin)
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(parameters).await())
                     {
                         test.assertNotNull(response);
@@ -1011,10 +996,6 @@ public interface GitHubClientTests
                         test.assertOneOf(Iterable.create(204, 404), statusCode);
                         switch (statusCode)
                         {
-                            case 204:
-                                test.assertEqual(JSONObject.create(), response.getBodyJson().await());
-                                break;
-
                             case 404:
                                 test.assertTrue(response.isErrorResponse());
                                 final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
@@ -1027,27 +1008,27 @@ public interface GitHubClientTests
                                 test.fail("Unexpected status code: " + statusCode);
                                 break;
                         }
-                        test.assertEqual(404, response.getStatusCode());
-
                     }
                 });
 
                 runner.test("with existing repository when authenticated", (Test test) ->
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    final GitHubRepository repository = gitHubClient.createRepository(CreateRepositoryParameters.create()
-                        .setName("fake-repo-name"))
-                        .await();
+                    final GitHubRepository repository = GitHubClientTests.getExistingRepository(gitHubClient, GitHubClientTests.getFakeRepositoryName(), clock);
 
                     final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
                         .setOwner(repository.getOwner().getLogin())
                         .setName(repository.getName());
-                    try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(parameters).await())
+
+                    GitHubClientTests.retry(clock, () ->
                     {
-                        test.assertNotNull(response);
-                        test.assertEqual(204, response.getStatusCode());
-                        test.assertFalse(response.isErrorResponse());
-                    }
+                        try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(parameters).await())
+                        {
+                            test.assertNotNull(response);
+                            test.assertEqual(204, response.getStatusCode());
+                            test.assertFalse(response.isErrorResponse());
+                        }
+                    });
                 });
             });
 
@@ -1094,30 +1075,18 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin("fake-owner"))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(repository).await())
                     {
-                        final int statusCode = response.getStatusCode();
-                        test.assertOneOf(Iterable.create(403, 404), statusCode);
-                        test.assertTrue(response.isErrorResponse());
-                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
-                        switch (statusCode)
-                        {
-                            case 403:
-                                test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", errorResponse.getMessage());
-                                test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
-                                break;
-
-                            case 404:
+                        GitHubClientTests.assertResponse(test, response,
+                            404, () ->
+                            {
+                                test.assertTrue(response.isErrorResponse());
+                                final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
                                 test.assertEqual("Not Found", errorResponse.getMessage());
                                 test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", errorResponse.getDocumentationUrl());
-                                break;
-
-                            default:
-                                test.fail("Unexpected status code");
-                                break;
-                        }
-                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                            });
                     }
                 });
 
@@ -1127,34 +1096,18 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin("fake-owner"))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(repository).await())
                     {
-                        final int statusCode = response.getStatusCode();
-                        test.assertOneOf(Iterable.create(403, 404), statusCode);
-                        test.assertTrue(response.isErrorResponse());
-                        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
-                        switch (statusCode)
-                        {
-                            case 403:
-                                test.assertEqual(
-                                    "API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)",
-                                    errorResponse.getMessage());
-                                test.assertEqual(
-                                    "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting",
-                                    errorResponse.getDocumentationUrl());
-                                break;
-
-                            case 404:
+                        GitHubClientTests.assertResponse(test, response,
+                            404, () ->
+                            {
+                                test.assertTrue(response.isErrorResponse());
+                                final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
                                 test.assertEqual("Not Found", errorResponse.getMessage());
                                 test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", errorResponse.getDocumentationUrl());
-                                break;
-
-                            default:
-                                test.fail();
-                                break;
-                        }
-                        test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                                test.assertEqual(Iterable.create(), errorResponse.getErrors());
+                            });
                     }
                 });
 
@@ -1164,7 +1117,7 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin("fake-owner"))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(repository).await())
                     {
                         test.assertEqual(401, response.getStatusCode());
@@ -1183,7 +1136,7 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin(authenticatedUserLogin))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(repository).await())
                     {
                         test.assertNotNull(response);
@@ -1199,15 +1152,16 @@ public interface GitHubClientTests
                 runner.test("with existing repository when authenticated", (Test test) ->
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    final GitHubRepository repository = gitHubClient.createRepository(CreateRepositoryParameters.create()
-                        .setName("fake-repo-name"))
-                        .await();
-                    try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(repository).await())
+                    final GitHubRepository repository = GitHubClientTests.getExistingRepository(gitHubClient, GitHubClientTests.getFakeRepositoryName(), clock);
+                    GitHubClientTests.retry(clock, () ->
                     {
-                        test.assertNotNull(response);
-                        test.assertEqual(204, response.getStatusCode());
-                        test.assertFalse(response.isErrorResponse());
-                    }
+                        try (final GitHubResponse response = gitHubClient.sendDeleteRepositoryRequest(repository).await())
+                        {
+                            test.assertNotNull(response);
+                            test.assertEqual(204, response.getStatusCode());
+                            test.assertFalse(response.isErrorResponse());
+                        }
+                    });
                 });
             });
 
@@ -1233,27 +1187,15 @@ public interface GitHubClientTests
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.None);
                     final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
                         .setOwner("fake-owner")
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(parameters).await(), GitHubException.class);
-                    final int statusCode = exception.getStatusCode();
-                    test.assertOneOf(Iterable.create(403, 404), statusCode);
-                    switch (statusCode)
-                    {
-                        case 403:
-                            test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", exception.getMessage());
-                            test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", exception.getDocumentationUrl());
-                            break;
-
-                        case 404:
+                    GitHubClientTests.assertException(test, exception,
+                        404, () ->
+                        {
                             test.assertEqual("Not Found", exception.getMessage());
                             test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", exception.getDocumentationUrl());
-                            break;
-
-                        default:
-                            test.fail("Unexpected status code");
-                            break;
-                    }
-                    test.assertEqual(Iterable.create(), exception.getErrors());
+                            test.assertEqual(Iterable.create(), exception.getErrors());
+                        });
                 });
 
                 runner.test("with existing repository when not authenticated", (Test test) ->
@@ -1263,20 +1205,13 @@ public interface GitHubClientTests
                         .setOwner("danschultequb")
                         .setName("github-java");
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(parameters).await(), GitHubException.class);
-                    {
-                        test.assertEqual(403, exception.getStatusCode());
-                        test.assertOneOf(
-                            Iterable.create(
-                                "Must have admin rights to Repository.",
-                                "API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)"),
-                            exception.getMessage());
-                        test.assertOneOf(
-                            Iterable.create(
-                                "https://docs.github.com/rest/reference/repos#delete-a-repository",
-                                "https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting"),
-                            exception.getDocumentationUrl());
-                        test.assertEqual(Iterable.create(), exception.getErrors());
-                    }
+                    GitHubClientTests.assertException(test, exception,
+                        403, () ->
+                        {
+                            test.assertEqual("Must have admin rights to Repository.", exception.getMessage());
+                            test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", exception.getDocumentationUrl());
+                            test.assertEqual(Iterable.create(), exception.getErrors());
+                        });
                 });
 
                 runner.test("with invalid personal access token", (Test test) ->
@@ -1284,7 +1219,7 @@ public interface GitHubClientTests
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Invalid);
                     final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
                         .setOwner("fake-owner")
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(parameters).await(), GitHubException.class);
                     test.assertEqual(401, exception.getStatusCode());
                     test.assertEqual("Bad credentials", exception.getMessage());
@@ -1298,7 +1233,7 @@ public interface GitHubClientTests
                     final String authenticatedUserLogin = gitHubClient.getAuthenticatedUser().await().getLogin();
                     final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
                         .setOwner(authenticatedUserLogin)
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(parameters).await(), GitHubException.class);
                     test.assertEqual(404, exception.getStatusCode());
                     test.assertEqual("Not Found", exception.getMessage());
@@ -1309,14 +1244,22 @@ public interface GitHubClientTests
                 runner.test("with existing repository when authenticated", (Test test) ->
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    final GitHubRepository repository = gitHubClient.createRepository(CreateRepositoryParameters.create()
-                        .setName("fake-repo-name"))
-                        .await();
+                    final String repositoryName = GitHubClientTests.getFakeRepositoryName();
+                    final GitHubRepository existingRepository = GitHubClientTests.getExistingRepository(gitHubClient, repositoryName, clock);
 
-                    final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
-                        .setOwner(repository.getOwner().getLogin())
-                        .setName(repository.getName());
-                    gitHubClient.deleteRepository(parameters).await();
+                    GitHubClientTests.retry(clock, () ->
+                    {
+                        final DeleteRepositoryParameters parameters = DeleteRepositoryParameters.create()
+                            .setOwner(existingRepository.getOwner().getLogin())
+                            .setName(existingRepository.getName());
+                        gitHubClient.deleteRepository(parameters).await();
+                    });
+
+                    GitHubClientTests.retry(clock, () ->
+                    {
+                        final Iterable<GitHubRepository> repositoriesAfterDelete = gitHubClient.getRepositoriesForAuthenticatedUser().await();
+                        test.assertFalse(repositoriesAfterDelete.contains(existingRepository));
+                    });
                 });
             });
 
@@ -1363,27 +1306,15 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin("fake-owner"))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(repository).await(), GitHubException.class);
-                    final int statusCode = exception.getStatusCode();
-                    test.assertOneOf(Iterable.create(403, 404), statusCode);
-                    switch (statusCode)
-                    {
-                        case 403:
-                            test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", exception.getMessage());
-                            test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", exception.getDocumentationUrl());
-                            break;
-
-                        case 404:
+                    GitHubClientTests.assertException(test, exception,
+                        404, () ->
+                        {
                             test.assertEqual("Not Found", exception.getMessage());
                             test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", exception.getDocumentationUrl());
-                            break;
-
-                        default:
-                            test.fail("Unexpected status code");
-                            break;
-                    }
-                    test.assertEqual(Iterable.create(), exception.getErrors());
+                            test.assertEqual(Iterable.create(), exception.getErrors());
+                        });
                 });
 
                 runner.test("with existing repository when not authenticated", (Test test) ->
@@ -1392,26 +1323,15 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin("fake-owner"))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(repository).await(), GitHubException.class);
-                    final int statusCode = exception.getStatusCode();
-                    test.assertOneOf(Iterable.create(403, 404), statusCode);
-                    switch (statusCode)
-                    {
-                        case 403:
-                            test.assertEqual("API rate limit exceeded for 73.181.147.2. (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)", exception.getMessage());
-                            test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", exception.getDocumentationUrl());
-                            break;
-
-                        case 404:
+                    GitHubClientTests.assertException(test, exception,
+                        404, () ->
+                        {
                             test.assertEqual("Not Found", exception.getMessage());
                             test.assertEqual("https://docs.github.com/rest/reference/repos#delete-a-repository", exception.getDocumentationUrl());
-                            break;
-
-                        default:
-                            test.fail("Unexpected status code");
-                            break;
-                    }
+                            test.assertEqual(Iterable.create(), exception.getErrors());
+                        });
                 });
 
                 runner.test("with invalid personal access token", (Test test) ->
@@ -1420,7 +1340,7 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin("fake-owner"))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(repository).await(), GitHubException.class);
                     test.assertEqual(401, exception.getStatusCode());
                     test.assertEqual("Bad credentials", exception.getMessage());
@@ -1435,7 +1355,7 @@ public interface GitHubClientTests
                     final GitHubRepository repository = GitHubRepository.create()
                         .setOwner(GitHubUser.create()
                             .setLogin(authenticatedUserLogin))
-                        .setName("fake-repo-name");
+                        .setName(GitHubClientTests.getFakeRepositoryName());
                     final GitHubException exception = test.assertThrows(() -> gitHubClient.deleteRepository(repository).await(), GitHubException.class);
                     test.assertEqual(404, exception.getStatusCode());
                     test.assertEqual("Not Found", exception.getMessage());
@@ -1446,13 +1366,197 @@ public interface GitHubClientTests
                 runner.test("with existing repository when authenticated", (Test test) ->
                 {
                     final GitHubClient gitHubClient = creator.run(AccessTokenType.Valid);
-                    final GitHubRepository repository = gitHubClient.createRepository(CreateRepositoryParameters.create()
-                        .setName("fake-repo-name"))
-                        .await();
+                    final String repositoryName = GitHubClientTests.getFakeRepositoryName();
+                    final GitHubRepository existingRepository = GitHubClientTests.getExistingRepository(gitHubClient, repositoryName, clock);
 
-                    gitHubClient.deleteRepository(repository).await();
+                    GitHubClientTests.retry(clock, () ->
+                    {
+                        gitHubClient.deleteRepository(existingRepository).await();
+                    });
+
+                    GitHubClientTests.retry(clock, () ->
+                    {
+                        final Iterable<GitHubRepository> repositoriesAfterDelete = gitHubClient.getRepositoriesForAuthenticatedUser().await();
+                        test.assertFalse(repositoriesAfterDelete.contains(existingRepository));
+                    });
                 });
             });
         });
+    }
+
+    static GitHubRepository getExistingRepository(GitHubClient githubClient, String repositoryName, Clock clock)
+    {
+        PreCondition.assertNotNull(githubClient, "githubClient");
+        PreCondition.assertNotNullAndNotEmpty(repositoryName, "repositoryName");
+        PreCondition.assertNotNull(clock, "clock");
+
+        final GitHubUser authenticatedUser = githubClient.getAuthenticatedUser().await();
+        final String owner = authenticatedUser.getLogin();
+
+        final GetRepositoryParameters getRepositoryParameters = GetRepositoryParameters.create()
+            .setOwner(owner)
+            .setName(repositoryName);
+        final GetRepositoryResponse getRepositoryResponse = githubClient.getRepository(getRepositoryParameters).await();
+        GitHubRepository repository = getRepositoryResponse.getRepository().catchError().await();
+        if (repository == null)
+        {
+            final CreateRepositoryParameters createParameters = CreateRepositoryParameters.create()
+                .setName(repositoryName);
+            repository = GitHubClientTests.retry(clock, () -> githubClient.createRepository(createParameters).await());
+        }
+
+        PostCondition.assertNotNull(repository, "repository");
+
+        return repository;
+    }
+
+    static void retry(Clock clock, Action0 action)
+    {
+        PreCondition.assertNotNull(clock, "clock");
+        PreCondition.assertNotNull(action, "action");
+
+        GitHubClientTests.retry(clock, () ->
+        {
+            action.run();
+            return null;
+        });
+    }
+
+    static <T> T retry(Clock clock, Function0<T> function)
+    {
+        PreCondition.assertNotNull(clock, "clock");
+        PreCondition.assertNotNull(function, "function");
+
+        return Retry.create()
+            .setShouldRetryFunction(3, () -> clock.delay(Duration.seconds(1)).await())
+            .run(function)
+            .await();
+    }
+
+    static void assertResponse(Test test, GitHubResponse response, int expectedStatusCode, Action0 expectedAssertions)
+    {
+        PreCondition.assertNotNull(expectedAssertions, "expectedAssertions");
+
+        test.assertNotNull(response);
+
+        final int statusCode = response.getStatusCode();
+        if (statusCode == expectedStatusCode)
+        {
+            try
+            {
+                expectedAssertions.run();
+            }
+            catch (TestError e)
+            {
+                if (GitHubClientTests.isRateLimitExceeded(response))
+                {
+                    GitHubClientTests.assertRateLimitExceeded(test, response);
+                }
+                else
+                {
+                    throw e;
+                }
+            }
+        }
+        else if (statusCode == 403)
+        {
+            GitHubClientTests.assertRateLimitExceeded(test, response);
+        }
+        else
+        {
+            test.fail("Unexpected status code: " + statusCode);
+        }
+    }
+
+    static void assertException(Test test, GitHubException exception, int expectedStatusCode, Action0 expectedAssertions)
+    {
+        PreCondition.assertNotNull(expectedAssertions, "expectedAssertions");
+
+        test.assertNotNull(exception);
+
+        final int statusCode = exception.getStatusCode();
+        if (statusCode == expectedStatusCode)
+        {
+            try
+            {
+                expectedAssertions.run();
+            }
+            catch (TestError e)
+            {
+                if (GitHubClientTests.isRateLimitExceeded(exception))
+                {
+                    GitHubClientTests.assertRateLimitExceeded(test, exception);
+                }
+                else
+                {
+                    throw e;
+                }
+            }
+        }
+        else if (statusCode == 403)
+        {
+            GitHubClientTests.assertRateLimitExceeded(test, exception);
+        }
+        else
+        {
+            test.fail("Unexpected status code: " + statusCode);
+        }
+    }
+
+    static boolean isRateLimitExceeded(GitHubException exception)
+    {
+        PreCondition.assertNotNull(exception, "exception");
+
+        return GitHubClientTests.isRateLimitExceeded(exception.getStatusCode(), exception.getMessage());
+    }
+
+    static boolean isRateLimitExceeded(GitHubResponse response)
+    {
+        PreCondition.assertNotNull(response, "response");
+
+        boolean result = false;
+        if (response.isErrorResponse())
+        {
+            final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+            result = GitHubClientTests.isRateLimitExceeded(response.getStatusCode(), errorResponse.getMessage());
+        }
+        return result;
+    }
+
+    static boolean isRateLimitExceeded(int statusCode, String message)
+    {
+        PreCondition.assertNotNullAndNotEmpty(message, "message");
+
+        return statusCode == 403 &&
+            Strings.startsWith(message, "API rate limit exceeded for ") &&
+            Strings.endsWith(message, ". (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)");
+    }
+
+    static void assertRateLimitExceeded(Test test, GitHubException exception)
+    {
+        PreCondition.assertNotNull(test, "test");
+        PreCondition.assertNotNull(exception, "exception");
+        PreCondition.assertEqual(403, exception.getStatusCode(), "exception.getStatusCode()");
+
+        final String message = exception.getMessage();
+        test.assertStartsWith(message, "API rate limit exceeded for ");
+        test.assertEndsWith(message, ". (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)");
+        test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", exception.getDocumentationUrl());
+        test.assertEqual(Iterable.create(), exception.getErrors());
+    }
+
+    static void assertRateLimitExceeded(Test test, GitHubResponse response)
+    {
+        PreCondition.assertNotNull(test, "test");
+        PreCondition.assertNotNull(response, "response");
+        PreCondition.assertEqual(403, response.getStatusCode(), "response.getStatusCode()");
+        PreCondition.assertTrue(response.isErrorResponse(), "response.isErrorResponse()");
+
+        final GitHubErrorResponse errorResponse = response.getErrorResponse().await();
+        final String message = errorResponse.getMessage();
+        test.assertStartsWith(message, "API rate limit exceeded for ");
+        test.assertEndsWith(message, ". (But here's the good news: Authenticated requests get a higher rate limit. Check out the documentation for more details.)");
+        test.assertEqual("https://docs.github.com/rest/overview/resources-in-the-rest-api#rate-limiting", errorResponse.getDocumentationUrl());
+        test.assertEqual(Iterable.create(), errorResponse.getErrors());
     }
 }
