@@ -2,13 +2,13 @@
   "$schema": "file:///C:/qub/qub/javaproject-java/data/javaproject.schema.json",
   "publisher": "qub",
   "project": "github-java",
-  "version": "21",
+  "version": "22",
   "java": {
     "dependencies": [
       {
         "publisher": "qub",
         "project": "http-java",
-        "version": "43"
+        "version": "44"
       }
     ]
   }
