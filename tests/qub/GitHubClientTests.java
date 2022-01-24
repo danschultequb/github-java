@@ -737,7 +737,7 @@ public interface GitHubClientTests
                     }
                     finally
                     {
-                        gitHubClient.deleteRepository(repository).await();
+                        gitHubClient.deleteRepository(repository).catchError().await();
                     }
                 });
             });
