@@ -728,6 +728,8 @@ public interface GitHubClientTests
                         final String repositoryOwner = owner.getLogin();
                         test.assertNotNullAndNotEmpty(repositoryOwner);
                         test.assertEqual(repositoryOwner + "/" + repositoryName, repository.getFullName());
+                        test.assertEqual(URL.parse("git://github.com/" + repositoryOwner + "/" + repositoryName + ".git").await(), repository.getGitUrl());
+                        test.assertEqual(URL.parse("https://github.com/" + repositoryOwner + "/" + repositoryName + ".git").await(), repository.getCloneUrl());
 
                         final Iterable<GitHubRepository> authenticatedUserRepositories = gitHubClient.getRepositoriesForAuthenticatedUser().await();
                         test.assertTrue(authenticatedUserRepositories.contains((GitHubRepository existingRepository) ->

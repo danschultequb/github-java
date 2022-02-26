@@ -9,6 +9,7 @@ public class GitHubRepository extends JSONObjectWrapperBase
     private static final String fullNamePropertyName = "full_name";
     private static final String ownerPropertyName = "owner";
     private static final String gitUrlPropertyName = "git_url";
+    private static final String cloneUrlPropertyName = "clone_url";
 
     protected GitHubRepository(JSONObject json)
     {
@@ -132,6 +133,23 @@ public class GitHubRepository extends JSONObjectWrapperBase
         PreCondition.assertNotNull(gitUrl, "gitUrl");
 
         this.toJson().setString(GitHubRepository.gitUrlPropertyName, gitUrl.toString(true));
+
+        return this;
+    }
+
+    public URL getCloneUrl()
+    {
+        return this.toJson().getString(GitHubRepository.cloneUrlPropertyName)
+            .then((String gitUrlString) -> URL.parse(gitUrlString).await())
+            .catchError()
+            .await();
+    }
+
+    public GitHubRepository setCloneUrl(URL cloneUrl)
+    {
+        PreCondition.assertNotNull(cloneUrl, "cloneUrl");
+
+        this.toJson().setString(GitHubRepository.cloneUrlPropertyName, cloneUrl.toString(true));
 
         return this;
     }

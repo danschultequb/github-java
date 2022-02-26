@@ -17,7 +17,7 @@ public interface CreateRepositoryResponseTests
                     test.assertNotNull(response);
                     test.assertFalse(response.isErrorResponse());
                     test.assertThrows(() -> response.getRepository().await(),
-                        new ParseException("Missing object left curly bracket ('{')."));
+                        new ParseException("No JSON tokens found."));
                     test.assertThrows(() -> response.getErrorResponse().await(),
                         new PreConditionFailure("this.isErrorResponse() cannot be false."));
                 });
@@ -30,7 +30,7 @@ public interface CreateRepositoryResponseTests
                     test.assertNotNull(response);
                     test.assertFalse(response.isErrorResponse());
                     test.assertThrows(() -> response.getRepository().await(),
-                        new ParseException("Missing object left curly bracket ('{')."));
+                        new ParseException("No JSON tokens found."));
                     test.assertThrows(() -> response.getErrorResponse().await(),
                         new PreConditionFailure("this.isErrorResponse() cannot be false."));
                 });
@@ -60,9 +60,9 @@ public interface CreateRepositoryResponseTests
                     test.assertNotNull(response);
                     test.assertTrue(response.isErrorResponse());
                     test.assertThrows(() -> response.getRepository().await(),
-                        new ParseException("Missing object left curly bracket ('{')."));
+                        new ParseException("No JSON tokens found."));
                     test.assertThrows(() -> response.getErrorResponse().await(),
-                        new ParseException("Missing object left curly bracket ('{')."));
+                        new ParseException("No JSON tokens found."));
                 });
 
                 runner.test("with 404 status code and empty JSON-object body", (Test test) ->
@@ -75,8 +75,7 @@ public interface CreateRepositoryResponseTests
                     test.assertTrue(response.isErrorResponse());
                     test.assertThrows(() -> response.getRepository().await(),
                         new PreConditionFailure("errorResponse.getMessage() cannot be null."));
-                    test.assertThrows(() -> response.getErrorResponse().await(),
-                        new ParseException("Missing object left curly bracket ('{')."));
+                    test.assertEqual(GitHubErrorResponse.create(), response.getErrorResponse().await());
                 });
             });
         });

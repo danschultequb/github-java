@@ -4,6 +4,9 @@ public class GitHubResponse implements HttpResponse
 {
     private final HttpResponse httpResponse;
 
+    private JSONSegment bodyJson;
+    private GitHubErrorResponse errorResponse;
+
     protected GitHubResponse(HttpResponse httpResponse)
     {
         PreCondition.assertNotNull(httpResponse, "httpResponse");
@@ -64,7 +67,14 @@ public class GitHubResponse implements HttpResponse
      */
     public Result<JSONSegment> getBodyJson()
     {
-        return JSON.parse(this.getBody());
+        return Result.create(() ->
+        {
+            if (this.bodyJson == null)
+            {
+                this.bodyJson = JSON.parse(this.getBody()).await();
+            }
+            return this.bodyJson;
+        });
     }
 
     /**
@@ -73,7 +83,16 @@ public class GitHubResponse implements HttpResponse
      */
     public Result<JSONObject> getBodyJsonObject()
     {
-        return JSON.parseObject(this.getBody());
+        return this.getBodyJson()
+            .then((JSONSegment bodyJson) ->
+            {
+                final JSONObject result = Types.as(bodyJson, JSONObject.class);
+                if (result == null)
+                {
+                    throw new ParseException("Expected the response's body to be a " + Types.getTypeName(JSONObject.class) + ", but it was a " + Types.getTypeName(bodyJson) + " instead.");
+                }
+                return result;
+            });
     }
 
     /**
@@ -82,7 +101,16 @@ public class GitHubResponse implements HttpResponse
      */
     public Result<JSONArray> getBodyJsonArray()
     {
-        return JSON.parseArray(this.getBody());
+        return this.getBodyJson()
+            .then((JSONSegment bodyJson) ->
+            {
+                final JSONArray result = Types.as(bodyJson, JSONArray.class);
+                if (result == null)
+                {
+                    throw new ParseException("Expected the response's body to be a " + Types.getTypeName(JSONArray.class) + ", but it was a " + Types.getTypeName(bodyJson) + " instead.");
+                }
+                return result;
+            });
     }
 
     /**
@@ -117,8 +145,19 @@ public class GitHubResponse implements HttpResponse
 
         return Result.create(() ->
         {
-            final JSONObject bodyJsonObject = this.getBodyJsonObject().await();
-            return GitHubErrorResponse.create(bodyJsonObject);
+            if (this.errorResponse == null)
+            {
+                final JSONSegment bodyJson = this.getBodyJson().await();
+                if (bodyJson instanceof JSONObject)
+                {
+                    this.errorResponse = GitHubErrorResponse.create((JSONObject)bodyJson);
+                }
+                else
+                {
+                    throw new ParseException("A " + Types.getTypeName(GitHubErrorResponse.class) + " must be created from a " + Types.getTypeName(JSONObject.class) + ", but found " + Types.getTypeName(bodyJson) + " instead.");
+                }
+            }
+            return this.errorResponse;
         });
     }
 }

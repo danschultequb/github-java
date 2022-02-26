@@ -141,10 +141,10 @@ public interface GitHubResponseTests
                 });
             };
 
-            getBodyJsonObjectErrorTest.run(null, new ParseException("Missing object left curly bracket ('{')."));
-            getBodyJsonObjectErrorTest.run("", new ParseException("Missing object left curly bracket ('{')."));
+            getBodyJsonObjectErrorTest.run(null, new ParseException("No JSON tokens found."));
+            getBodyJsonObjectErrorTest.run("", new ParseException("No JSON tokens found."));
             getBodyJsonObjectErrorTest.run("hello", new ParseException("Unrecognized JSONToken literal: hello"));
-            getBodyJsonObjectErrorTest.run("[]", new ParseException("Expected object left curly bracket ('{')."));
+            getBodyJsonObjectErrorTest.run("[]", new ParseException("Expected the response's body to be a JSONObject, but it was a JSONArray instead."));
 
             final Action1<JSONSegment> getBodyJsonObjectTest = (JSONSegment body) ->
             {
@@ -178,10 +178,10 @@ public interface GitHubResponseTests
                 });
             };
 
-            getBodyJsonArrayErrorTest.run(null, new ParseException("Missing array left square bracket ('[')."));
-            getBodyJsonArrayErrorTest.run("", new ParseException("Missing array left square bracket ('[')."));
+            getBodyJsonArrayErrorTest.run(null, new ParseException("No JSON tokens found."));
+            getBodyJsonArrayErrorTest.run("", new ParseException("No JSON tokens found."));
             getBodyJsonArrayErrorTest.run("hello", new ParseException("Unrecognized JSONToken literal: hello"));
-            getBodyJsonArrayErrorTest.run("{}", new ParseException("Expected array left square bracket ('[')."));
+            getBodyJsonArrayErrorTest.run("{}", new ParseException("Expected the response's body to be a JSONArray, but it was a JSONObject instead."));
 
             final Action1<JSONSegment> getBodyJsonArrayTest = (JSONSegment body) ->
             {
@@ -232,10 +232,10 @@ public interface GitHubResponseTests
                 });
             };
 
-            throwIfErrorResponseWithErrorResponse.run(400, null, new ParseException("Missing object left curly bracket ('{')."));
-            throwIfErrorResponseWithErrorResponse.run(401, "", new ParseException("Missing object left curly bracket ('{')."));
+            throwIfErrorResponseWithErrorResponse.run(400, null, new ParseException("No JSON tokens found."));
+            throwIfErrorResponseWithErrorResponse.run(401, "", new ParseException("No JSON tokens found."));
             throwIfErrorResponseWithErrorResponse.run(402, "hello", new ParseException("Unrecognized JSONToken literal: hello"));
-            throwIfErrorResponseWithErrorResponse.run(403, "[]", new ParseException("Expected object left curly bracket ('{')."));
+            throwIfErrorResponseWithErrorResponse.run(403, "[]", new ParseException("A GitHubErrorResponse must be created from a JSONObject, but found JSONArray instead."));
             throwIfErrorResponseWithErrorResponse.run(404, "{}", new PreConditionFailure("errorResponse.getMessage() cannot be null."));
             throwIfErrorResponseWithErrorResponse.run(
                 405,
