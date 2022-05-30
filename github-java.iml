@@ -13,26 +13,26 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/qub/qub/http-java/versions/57/http-java.jar!/"/>
-          <root url="jar://C:/qub/qub/http-java/versions/57/http-java.tests.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/58/http-java.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/58/http-java.tests.jar!/"/>
         </CLASSES>
         <JAVADOC/>
         <SOURCES>
-          <root url="jar://C:/qub/qub/http-java/versions/57/http-java-sources.jar!/"/>
-          <root url="jar://C:/qub/qub/http-java/versions/57/http-java.test-sources.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/58/http-java-sources.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/58/http-java.test-sources.jar!/"/>
         </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/qub/qub/lib-java/versions/189/lib-java.jar!/"/>
-          <root url="jar://C:/qub/qub/lib-java/versions/189/lib-java.tests.jar!/"/>
+          <root url="jar://C:/qub/qub/lib-java/versions/190/lib-java.jar!/"/>
+          <root url="jar://C:/qub/qub/lib-java/versions/190/lib-java.tests.jar!/"/>
         </CLASSES>
         <JAVADOC/>
         <SOURCES>
-          <root url="jar://C:/qub/qub/lib-java/versions/189/lib-java-sources.jar!/"/>
-          <root url="jar://C:/qub/qub/lib-java/versions/189/lib-java.test-sources.jar!/"/>
+          <root url="jar://C:/qub/qub/lib-java/versions/190/lib-java-sources.jar!/"/>
+          <root url="jar://C:/qub/qub/lib-java/versions/190/lib-java.test-sources.jar!/"/>
         </SOURCES>
       </library>
     </orderEntry>
