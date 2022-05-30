@@ -13,13 +13,13 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/qub/qub/http-java/versions/58/http-java.jar!/"/>
-          <root url="jar://C:/qub/qub/http-java/versions/58/http-java.tests.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/59/http-java.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/59/http-java.tests.jar!/"/>
         </CLASSES>
         <JAVADOC/>
         <SOURCES>
-          <root url="jar://C:/qub/qub/http-java/versions/58/http-java-sources.jar!/"/>
-          <root url="jar://C:/qub/qub/http-java/versions/58/http-java.test-sources.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/59/http-java-sources.jar!/"/>
+          <root url="jar://C:/qub/qub/http-java/versions/59/http-java.test-sources.jar!/"/>
         </SOURCES>
       </library>
     </orderEntry>
