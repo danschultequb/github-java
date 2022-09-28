@@ -1,32 +1,32 @@
 package qub;
 
 /**
- * An client interface for interacting with a GitHub endpoint.
+ * A client interface for interacting with a GitHub endpoint.
  */
 public interface GitHubClient
 {
-    static BasicGitHubClient create(Network network)
+    public static BasicGitHubClient create(Network network)
     {
         return BasicGitHubClient.create(network);
     }
 
-    static BasicGitHubClient create(HttpClient httpClient)
+    public static BasicGitHubClient create(HttpClient httpClient)
     {
         return BasicGitHubClient.create(httpClient);
     }
 
     /**
-     * Get the base URL that this GitHubClient will target.
-     * @return The base URL that this GitHubClient will target.
+     * Get the base {@link URL} that this {@link GitHubClient} will target.
      */
-    URL getBaseUrl();
+    public URL getBaseUrl();
 
     /**
-     * Set the base URL that this GitHubClient will target.
-     * @param baseUrl The base URL that this GitHubClient will target.
+     * Set the base {@link URL} {@link String} that this {@link GitHubClient} will target.
+     * @param baseUrl The base {@link URL} {@link String} that this {@link GitHubClient} will
+     *                target.
      * @return This object for method chaining.
      */
-    default Result<GitHubClient> setBaseUrl(String baseUrl)
+    public default Result<GitHubClient> setBaseUrl(String baseUrl)
     {
         PreCondition.assertNotNullAndNotEmpty(baseUrl, "baseUrl");
 
@@ -37,38 +37,39 @@ public interface GitHubClient
     }
 
     /**
-     * Set the base URL that this GitHubClient will target.
-     * @param baseUrl The base URL that this GitHubClient will target.
+     * Set the base {@link URL} that this {@link GitHubClient} will target.
+     * @param baseUrl The base {@link URL} that this {@link GitHubClient} will target.
      * @return This object for method chaining.
      */
-    GitHubClient setBaseUrl(URL baseUrl);
+    public GitHubClient setBaseUrl(URL baseUrl);
 
     /**
-     * Set the access token that will be used to authenticate the client's requests.
-     * @param accessToken The access token that will be used to authenticate the client's requests.
+     * Set the access token {@link String} that will be used to authenticate this
+     * {@link GitHubClient}'s requests.
+     * @param accessToken The access token {@link String} that will be used to authenticate this
+     *                    {@link GitHubClient}'s requests.
      * @return This object for method chaining.
      */
-    GitHubClient setAccessToken(String accessToken);
+    public GitHubClient setAccessToken(String accessToken);
 
     /**
-     * Get whether or not this client has an access token.
-     * @return Whether or not this client has an access token.
+     * Get whether this {@link GitHubClient} has an access token.
      */
-    boolean hasAccessToken();
+    public boolean hasAccessToken();
 
     /**
-     * Send a generic GitHubRequest. If this client is authenticated, then the personal access
-     * token will be added to the request before it is sent.
-     * @param request The request to send.
-     * @return The response for the request.
+     * Send a generic {@link GitHubRequest}. If this {@link GitHubClient} is authenticated, then the
+     * personal access token will be added to the request before it is sent.
+     * @param request The {@link GitHubRequest} to send.
+     * @return The {@link GitHubResponse} for the {@link GitHubRequest}.
      */
-    Result<GitHubResponse> sendRequest(GitHubRequest request);
+    public Result<GitHubResponse> sendRequest(GitHubRequest request);
 
     /**
-     * Get the details about the user that this client is authenticated to.
-     * @return The details about the user that this client is authenticated to.
+     * Get the details about the {@link GitHubUser} that this {@link GitHubClient} is authenticated
+     * to.
      */
-    default Result<GetAuthenticatedUserResponse> sendGetAuthenticatedUserRequest()
+    public default Result<GetAuthenticatedUserResponse> sendGetAuthenticatedUserRequest()
     {
         return Result.create(() ->
         {
@@ -85,10 +86,10 @@ public interface GitHubClient
     }
 
     /**
-     * Get the details about the user that this client is authenticated to.
-     * @return The details about the user that this client is authenticated to.
+     * Get the details about the {@link GitHubUser} that this {@link GitHubClient} is authenticated
+     * to.
      */
-    default Result<GitHubUser> getAuthenticatedUser()
+    public default Result<GitHubUser> getAuthenticatedUser()
     {
         return Result.create(() ->
         {
@@ -102,11 +103,11 @@ public interface GitHubClient
     }
 
     /**
-     * Get the repository that matches the provided parameters.
-     * @param parameters The parameters that describe the repository to return.
-     * @return The matching repository.
+     * Get the {@link GitHubRepository} that matches the provided {@link GetRepositoryParameters}.
+     * @param parameters The {@link GetRepositoryParameters} that describe the
+     * {@link GitHubRepository} to return.
      */
-    default Result<GetRepositoryResponse> getRepository(GetRepositoryParameters parameters)
+    public default Result<GetRepositoryResponse> getRepository(GetRepositoryParameters parameters)
     {
         PreCondition.assertNotNull(parameters, "parameters");
         PreCondition.assertNotNullAndNotEmpty(parameters.getOwner(), "parameters.getOwner()");
@@ -127,10 +128,10 @@ public interface GitHubClient
     }
 
     /**
-     * Get the repositories the authenticated user has permission to access.
-     * @return The repositories the authenticated user has permission to access.
+     * Get the {@link GitHubRepository}s the authenticated {@link GitHubUser} has permission to
+     * access.
      */
-    default Result<GetRepositoriesForAuthenticatedUserResponse> sendGetRepositoriesForAuthenticatedUserRequest()
+    public default Result<GetRepositoriesForAuthenticatedUserResponse> sendGetRepositoriesForAuthenticatedUserRequest()
     {
         return Result.create(() ->
         {
@@ -147,10 +148,10 @@ public interface GitHubClient
     }
 
     /**
-     * Get the repositories the authenticated user has permission to access.
-     * @return The repositories the authenticated user has permission to access.
+     * Get the {@link GitHubRepository}s the authenticated {@link GitHubUser} has permission to
+     * access.
      */
-    default Result<Iterable<GitHubRepository>> getRepositoriesForAuthenticatedUser()
+    public default Result<Iterable<GitHubRepository>> getRepositoriesForAuthenticatedUser()
     {
         return Result.create(() ->
         {
@@ -164,11 +165,11 @@ public interface GitHubClient
     }
 
     /**
-     * Create a new repository.
-     * @param parameters The parameters for the request.
-     * @return The newly created repository.
+     * Create a new {@link GitHubRepository}.
+     * @param parameters The {@link CreateRepositoryParameters} for the {@link GitHubRequest}.
+     * @return The newly created {@link GitHubRepository}.
      */
-    default Result<CreateRepositoryResponse> sendCreateRepositoryRequest(CreateRepositoryParameters parameters)
+    public default Result<CreateRepositoryResponse> sendCreateRepositoryRequest(CreateRepositoryParameters parameters)
     {
         PreCondition.assertNotNull(parameters, "parameters");
         PreCondition.assertNotNullAndNotEmpty(parameters.getName(), "parameters.getName()");
@@ -189,11 +190,11 @@ public interface GitHubClient
     }
 
     /**
-     * Create a new repository.
-     * @param parameters The parameters for the request.
-     * @return The newly created repository.
+     * Create a new {@link GitHubRepository}.
+     * @param parameters The {@link CreateRepositoryParameters} for the {@link GitHubRequest}.
+     * @return The newly created {@link GitHubRepository}.
      */
-    default Result<GitHubRepository> createRepository(CreateRepositoryParameters parameters)
+    public default Result<GitHubRepository> createRepository(CreateRepositoryParameters parameters)
     {
         PreCondition.assertNotNull(parameters, "parameters");
         PreCondition.assertNotNullAndNotEmpty(parameters.getName(), "parameters.getName()");
@@ -210,11 +211,10 @@ public interface GitHubClient
     }
 
     /**
-     * Delete an existing repository.
-     * @param parameters The parameters for the request.
-     * @return The result of deleting the repository.
+     * Delete an existing {@link GitHubRepository}.
+     * @param parameters The {@link DeleteRepositoryParameters} for the {@link GitHubRequest}.
      */
-    default Result<GitHubResponse> sendDeleteRepositoryRequest(DeleteRepositoryParameters parameters)
+    public default Result<GitHubResponse> sendDeleteRepositoryRequest(DeleteRepositoryParameters parameters)
     {
         PreCondition.assertNotNull(parameters, "parameters");
         PreCondition.assertNotNullAndNotEmpty(parameters.getOwner(), "parameters.getOwner()");
@@ -234,11 +234,10 @@ public interface GitHubClient
     }
 
     /**
-     * Delete an existing repository.
-     * @param repository The repository to delete.
-     * @return The result of deleting the repository.
+     * Delete an existing {@link GitHubRepository}.
+     * @param repository The {@link GitHubRepository} to delete.
      */
-    default Result<GitHubResponse> sendDeleteRepositoryRequest(GitHubRepository repository)
+    public default Result<GitHubResponse> sendDeleteRepositoryRequest(GitHubRepository repository)
     {
         PreCondition.assertNotNull(repository, "repository");
         PreCondition.assertNotNull(repository.getOwner(), "repository.getOwner()");
@@ -251,11 +250,10 @@ public interface GitHubClient
     }
 
     /**
-     * Delete an existing repository.
-     * @param parameters The parameters for the request.
-     * @return The result of deleting the repository.
+     * Delete an existing {@link GitHubRepository}.
+     * @param parameters The {@link DeleteRepositoryParameters} for the {@link GitHubRequest}.
      */
-    default Result<Void> deleteRepository(DeleteRepositoryParameters parameters)
+    public default Result<Void> deleteRepository(DeleteRepositoryParameters parameters)
     {
         PreCondition.assertNotNull(parameters, "parameters");
         PreCondition.assertNotNullAndNotEmpty(parameters.getOwner(), "parameters.getOwner()");
@@ -271,9 +269,8 @@ public interface GitHubClient
     }
 
     /**
-     * Delete an existing repository.
-     * @param repository The repository to delete.
-     * @return The result of deleting the repository.
+     * Delete an existing {@link GitHubRepository}.
+     * @param repository The {@link GitHubRepository} to delete.
      */
     default Result<Void> deleteRepository(GitHubRepository repository)
     {
